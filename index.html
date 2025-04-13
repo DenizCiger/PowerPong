@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong with Power-ups</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="score-container">
+            <div id="player1-score">0</div>
+            <div class="game-title">POWER PONG</div>
+            <div id="player2-score">0</div>
+        </div>
+        <canvas id="gameCanvas" width="800" height="500"></canvas>
+        <div class="info-container">
+            <div class="controls">
+                <p>Player 1: W/S</p>
+                <div id="player1-effects" class="effects"></div>
+            </div>
+            <div class="game-status" id="game-status">Press SPACE to start</div>
+            <div class="help-button" onclick="toggleHelp()">?</div>
+            <div class="controls">
+                <p>Player 2: ↑/↓</p>
+                <div id="player2-effects" class="effects"></div>
+            </div>
+        </div>
+    </div>
+      <!-- Help overlay -->
+    <div id="helpOverlay" class="help-overlay" style="display: none;">
+        <div class="help-content">
+            <h2 class="guide-title">Power Pong - Game Guide</h2>
+            <div class="guide-section">
+                <div class="controls-guide">
+                    <h3>Controls</h3>
+                    <div class="controls-grid">
+                        <div class="control-item player1">
+                            <div class="key-group">
+                                <div class="key">W</div>
+                                <div class="key">S</div>
+                            </div>
+                            <span>Player 1 Movement</span>
+                        </div>
+                        <div class="control-item player2">
+                            <div class="key-group">
+                                <div class="key">↑</div>
+                                <div class="key">↓</div>
+                            </div>
+                            <span>Player 2 Movement</span>
+                        </div>
+                        <div class="control-item">
+                            <div class="key wide">SPACE</div>
+                            <span>Start Game</span>
+                        </div>
+                        <div class="control-item">
+                            <div class="key">P</div>
+                            <span>Pause Game</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="powerups-section">
+                    <h3>Power-Ups</h3>
+                    <p class="section-desc">Collect power-ups by hitting them with the ball. Effects last for 7 seconds.</p>
+                    <div class="power-ups-list">
+                        <div class="power-up-item">
+                            <div class="power-up-icon" style="background-color: #00ff00;">
+                                <div class="shape triangle">↑</div>
+                            </div>
+                            <div class="power-up-info">
+                                <strong>Speed Boost</strong>
+                                <span>Your paddle moves 38% faster</span>
+                            </div>
+                        </div>
+                        <div class="power-up-item">
+                            <div class="power-up-icon" style="background-color: #ff0000;">
+                                <div class="shape triangle-down">↓</div>
+                            </div>
+                            <div class="power-up-info">
+                                <strong>Slow Down</strong>
+                                <span>Opponent paddle moves 38% slower</span>
+                            </div>
+                        </div>
+                        <div class="power-up-item">
+                            <div class="power-up-icon" style="background-color: #0088ff;">
+                                <div class="shape rectangle">⬌</div>
+                            </div>
+                            <div class="power-up-info">
+                                <strong>Paddle Growth</strong>
+                                <span>Your paddle is 40% larger</span>
+                            </div>
+                        </div>
+                        <div class="power-up-item">
+                            <div class="power-up-icon" style="background-color: #ff00ff;">
+                                <div class="shape diamond">⬍</div>
+                            </div>
+                            <div class="power-up-info">
+                                <strong>Shrink Opponent</strong>
+                                <span>Opponent paddle is 30% smaller</span>
+                            </div>
+                        </div>
+                        <div class="power-up-item">
+                            <div class="power-up-icon" style="background-color: #ffff00;">
+                                <div class="shape circle">⚡</div>
+                            </div>
+                            <div class="power-up-info">
+                                <strong>Fast Ball</strong>
+                                <span>Ball speed increased by 30%</span>
+                            </div>
+                        </div>
+                        <div class="power-up-item">
+                            <div class="power-up-icon" style="background-color: #ff8800;">
+                                <div class="shape star">+</div>
+                            </div>
+                            <div class="power-up-info">
+                                <strong>Multi Ball</strong>
+                                <span>Adds an extra ball to the game</span>
+                            </div>
+                        </div>
+                        <div class="power-up-item">
+                            <div class="power-up-icon" style="background-color: #ff9900;">
+                                <div class="shape circle">↺</div>
+                            </div>
+                            <div class="power-up-info">
+                                <strong>Curve Shot</strong>
+                                <span>Ball curves dynamically for 5 seconds</span>
+                            </div>
+                        </div>
+                        <div class="power-up-item special">
+                            <div class="power-up-icon" style="background: linear-gradient(45deg, #ffdd00, #ff4400, #cc0000);">
+                                <div class="shape hexagon">★</div>
+                            </div>
+                            <div class="power-up-info">
+                                <strong>Fury Mode</strong>
+                                <span>Paddle size +30%, speed +50%, ball speed +40%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hazards-section">
+                    <h3>Hazards</h3>
+                    <p class="section-desc">Watch out for these hazards that appear on the field! They last for 10 seconds.</p>
+                    <div class="hazards-list">
+                        <div class="hazard-item">
+                            <div class="hazard-icon gravity">
+                                <div class="gravity-swirl"></div>
+                            </div>
+                            <div class="hazard-info">
+                                <strong>Black Hole</strong>
+                                <span>Pulls the ball toward its center</span>
+                            </div>
+                        </div>
+                        <div class="hazard-item">
+                            <div class="hazard-icon whiteHole">
+                                <div class="whiteHole-rays"></div>
+                            </div>
+                            <div class="hazard-info">
+                                <strong>White Hole</strong>
+                                <span>Pushes the ball away from its center</span>
+                            </div>
+                        </div>
+                        <div class="hazard-item">
+                            <div class="hazard-icon wind">
+                                <div class="wind-lines"></div>
+                            </div>
+                            <div class="hazard-info">
+                                <strong>Wind Zone</strong>
+                                <span>Blows the ball in a specific direction</span>
+                            </div>
+                        </div>
+                        <div class="hazard-item">
+                            <div class="hazard-icon barrier">
+                                <div class="barrier-segments-container">
+                                    <div class="barrier-segment"></div>
+                                    <div class="barrier-segment"></div>
+                                    <div class="barrier-segment"></div>
+                                </div>
+                            </div>
+                            <div class="hazard-info">
+                                <strong>Barrier</strong>
+                                <span>Ball bounces off this moving obstacle</span>
+                            </div>
+                        </div>
+                        <div class="hazard-item">
+                            <div class="hazard-icon portal">
+                                <div class="portal-swirl"></div>
+                                <div class="portal-center"></div>
+                            </div>
+                            <div class="hazard-info">
+                                <strong>Portal</strong>
+                                <span>Teleports the ball between linked portals</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="danger-mode-section">
+                    <h3>Danger Mode</h3>
+                    <div class="danger-info">
+                        <div class="danger-icon">⚠</div>
+                        <p>When scores are close (within 2 points) and at least 5 points have been scored, the game enters Danger Mode with more frequent power-ups and hazards!</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="close-help" onclick="toggleHelp()">
+                <span>Close Guide</span>
+                <div class="key">ESC</div>
+            </button>
+        </div>
+    </div>
+    
+    <script>
+    function toggleHelp() {
+        const helpOverlay = document.getElementById('helpOverlay');
+        if (helpOverlay.style.display === 'none') {
+            helpOverlay.style.display = 'flex';
+        } else {
+            helpOverlay.style.display = 'none';
+        }
+    }
+    </script>
+    <script type="module" src="game.js"></script>
+</body>
+</html>
