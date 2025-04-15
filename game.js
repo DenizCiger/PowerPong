@@ -551,16 +551,16 @@ window.addEventListener('keydown', (e) => {
     
     if (e.key === ' ' && !GameState.gameRunning) {
         startGame();
-    }
-
-    // Playground mode controls
+    }    // Playground mode controls
     if (e.key === 'p' && e.altKey) {
+        e.preventDefault(); // Prevent the 'p' key from triggering pause
         GameState.playgroundMode = !GameState.playgroundMode;
         UI.showNotification(
             `Playground Mode: ${GameState.playgroundMode ? 'ON' : 'OFF'}`,
             GameState.playgroundMode ? '#00aa00' : '#aa0000'
         );
-    }    if (GameState.playgroundMode && GameState.gameRunning) {
+    }
+    if (GameState.playgroundMode && GameState.gameRunning) {
         if (key === 'n' || key === 'm') {
             if (e.shiftKey) {
                 // Cycle through hazards and clear existing ones

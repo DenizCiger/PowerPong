@@ -226,38 +226,46 @@ export function drawBallCountdown(ball, ballFreezeUntil) {
 export function showPauseOverlay() {
     // Create the pause overlay if it doesn't exist
     let pauseOverlay = document.getElementById('pauseOverlay');
+    let pauseIndicator = document.querySelector('.pause-indicator');
     
     if (!pauseOverlay) {
+        // Create background overlay
         pauseOverlay = document.createElement('div');
         pauseOverlay.id = 'pauseOverlay';
         pauseOverlay.className = 'pause-overlay';
-        
-        const pauseContent = document.createElement('div');
-        pauseContent.className = 'pause-content';
-        
-        // Create pause text
-        const pauseTitle = document.createElement('h2');
-        pauseTitle.textContent = 'GAME PAUSED';
-        
-        // Create instructions
-        const pauseInstructions = document.createElement('p');
-        pauseInstructions.textContent = 'Press P or ESC to resume';
-        
-        // Add elements to the pause content
-        pauseContent.appendChild(pauseTitle);
-        pauseContent.appendChild(pauseInstructions);
-        pauseOverlay.appendChild(pauseContent);
-        
-        // Add to body
         document.body.appendChild(pauseOverlay);
-    } else {
-        pauseOverlay.style.display = 'flex';
     }
+    
+    if (!pauseIndicator) {
+        // Create pause indicator
+        pauseIndicator = document.createElement('div');
+        pauseIndicator.className = 'pause-indicator';
+        
+        // Create pause text with icon
+        const pauseTitle = document.createElement('h2');
+        pauseTitle.innerHTML = '<span>⏸️</span><span>PAUSED</span>';
+        
+        // Create minimal instructions
+        const pauseInstructions = document.createElement('p');
+        pauseInstructions.textContent = 'P/ESC';
+        
+        // Add elements to the indicator
+        pauseIndicator.appendChild(pauseTitle);
+        pauseIndicator.appendChild(pauseInstructions);
+        document.body.appendChild(pauseIndicator);
+    }
+    
+    pauseOverlay.style.display = 'block';
+    pauseIndicator.style.display = 'block';
 }
 
 export function hidePauseOverlay() {
     const pauseOverlay = document.getElementById('pauseOverlay');
+    const pauseIndicator = document.querySelector('.pause-indicator');
     if (pauseOverlay) {
         pauseOverlay.style.display = 'none';
+    }
+    if (pauseIndicator) {
+        pauseIndicator.style.display = 'none';
     }
 }
