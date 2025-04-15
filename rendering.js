@@ -916,24 +916,114 @@ export function drawRallyEffect(balls, rallyCount) {
     const mainBall = balls[0];
     if (mainBall) {
         ctx.beginPath();
-        const glowSize = Math.min(rallyCount, 10) * 2;
+        // Larger glow for higher combos with logarithmic scaling
+        const glowSize = Math.min(20 + Math.log10(rallyCount + 1) * 20, 60);
         const gradient = ctx.createRadialGradient(
             mainBall.x, mainBall.y, BALL_RADIUS,
             mainBall.x, mainBall.y, BALL_RADIUS + glowSize
         );
-        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
-        gradient.addColorStop(1, 'rgba(255, 180, 100, 0)');
+        
+        // Color changes based on combo level with more tiers
+        let color1, color2;
+        if (rallyCount >= 100) {
+            // Rainbow effect for extremely high combos
+            const hue = (Date.now() / 20) % 360;
+            color1 = `hsla(${hue}, 100%, 50%, 0.9)`;
+            color2 = `hsla(${hue}, 100%, 50%, 0)`;
+        } else if (rallyCount >= 50) {
+            color1 = 'rgba(255, 0, 255, 0.9)'; // Magenta
+            color2 = 'rgba(255, 0, 255, 0)';
+        } else if (rallyCount >= 25) {
+            color1 = 'rgba(255, 0, 0, 0.9)'; // Red
+            color2 = 'rgba(255, 0, 0, 0)';
+        } else if (rallyCount >= 15) {
+            color1 = 'rgba(255, 100, 0, 0.9)'; // Orange
+            color2 = 'rgba(255, 50, 0, 0)';
+        } else if (rallyCount >= 5) {
+            color1 = 'rgba(255, 255, 150, 0.8)'; // Yellow
+            color2 = 'rgba(255, 180, 100, 0)';
+        } else {
+            color1 = 'rgba(255, 255, 255, 0.8)'; // White
+            color2 = 'rgba(255, 255, 255, 0)';
+        }
+          gradient.addColorStop(0, color1);
+        gradient.addColorStop(1, color2);
         ctx.fillStyle = gradient;
         ctx.arc(mainBall.x, mainBall.y, BALL_RADIUS + glowSize, 0, Math.PI * 2);
         ctx.fill();
         
-        // Add rally counter
-        if (rallyCount > 5) {
-            ctx.fillStyle = rallyCount > 10 ? '#ff5500' : '#ffffff';
-            ctx.font = `bold ${Math.min(14 + rallyCount, 28)}px Arial`;
+        // Add rally counter with pulsing effect
+        if (rallyCount > 3) {
+            // Faster pulse for higher combos
+            const pulseSpeed = Math.min(100 + rallyCount, 500);
+            const pulse = Math.sin(Date.now() / pulseSpeed) * 0.2 + 1;
+            const baseSize = Math.min(16 + Math.log10(rallyCount + 1) * 20, 60);
+            const size = baseSize * pulse;
+            
+            // Enhanced glow effects for high combos
+            if (rallyCount >= 5) {
+                ctx.shadowBlur = Math.min(10 + Math.log10(rallyCount) * 10, 30);
+                if (rallyCount >= 100) {
+                    // Rainbow shadow for extreme combos
+                    const hue = (Date.now() / 20) % 360;
+                    ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
+                } else if (rallyCount >= 50) {
+                    ctx.shadowColor = '#ff00ff'; // Magenta
+                } else if (rallyCount >= 25) {
+                    ctx.shadowColor = '#ff0000'; // Red
+                } else if (rallyCount >= 15) {
+                    ctx.shadowColor = '#ff6600'; // Orange
+                } else {
+                    ctx.shadowColor = '#ffaa00'; // Yellow
+                }
+            }
+            
+            // Text effects based on combo level
+            let textColor;
+            if (rallyCount >= 100) {
+                const hue = (Date.now() / 20) % 360;
+                textColor = `hsl(${hue}, 100%, 50%)`;
+            } else if (rallyCount >= 50) {
+                textColor = '#ff00ff';
+            } else if (rallyCount >= 25) {
+                textColor = '#ff2222';
+            } else if (rallyCount >= 15) {
+                textColor = '#ff6600';
+            } else if (rallyCount >= 5) {
+                textColor = '#ffaa00';
+            } else {
+                textColor = '#ffffff';
+            }
+            
+            ctx.fillStyle = textColor;
+            ctx.font = `bold ${size}px Arial`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(`${rallyCount}x`, ctx.canvas.width / 2, 30);
+            
+            // Draw combo text with shadow
+            ctx.fillText(`${rallyCount}×`, ctx.canvas.width / 2, 35);
+            
+            // Add dynamic combo text based on level
+            let comboText = '';
+            if (rallyCount >= 100) {
+                comboText = 'INCREDIBLE!';
+            } else if (rallyCount >= 50) {
+                comboText = 'UNSTOPPABLE!';
+            } else if (rallyCount >= 25) {
+                comboText = 'AMAZING!';
+            } else if (rallyCount >= 15) {
+                comboText = 'AWESOME!';
+            } else if (rallyCount >= 10) {
+                comboText = 'COMBO!';
+            }
+            
+            if (comboText) {
+                ctx.font = `bold ${Math.min(12 + Math.log10(rallyCount + 1) * 8, 32)}px Arial`;
+                ctx.fillText(comboText, ctx.canvas.width / 2, 65);
+            }
+            
+            // Reset shadow
+            ctx.shadowBlur = 0;
         }
     }
     

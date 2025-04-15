@@ -353,6 +353,52 @@ function drawBallTrails() {
     }
 }
 
+// Check for combo milestones and create effects
+function handleComboMilestones(prevCount, newCount, ball) {
+    const milestones = [5, 10, 15, 20];
+    for (const milestone of milestones) {
+        if (prevCount < milestone && newCount >= milestone) {
+            // Screen shake intensity increases with higher milestones
+            const shakeIntensity = (milestone / 5) * Constants.SCREEN_SHAKE_INTENSITY;
+            GameState.screenShake.x = (Math.random() - 0.5) * shakeIntensity;
+            GameState.screenShake.y = (Math.random() - 0.5) * shakeIntensity;
+            GameState.screenShake.timeLeft = Constants.SCREEN_SHAKE_DURATION;
+            
+            // Create milestone particle effects
+            const particleCount = milestone * 2;
+            const color = milestone >= 15 ? 'rgba(255, 50, 50, 0.8)' : 
+                         milestone >= 10 ? 'rgba(255, 150, 50, 0.8)' : 
+                         'rgba(255, 255, 150, 0.8)';
+            
+            Particles.createParticles(
+                ball.x,
+                ball.y,
+                particleCount,
+                {
+                    speedMin: 2,
+                    speedMax: 5,
+                    sizeMin: 2,
+                    sizeMax: 4,
+                    color: color,
+                    lifeMin: 30,
+                    lifeMax: 50
+                }
+            );
+            
+            // Create shockwave effect for higher milestones
+            if (milestone >= 10) {
+                Particles.createShockwave(
+                    ball.x,
+                    ball.y,
+                    Constants.BALL_RADIUS * 2,
+                    Constants.BALL_RADIUS * (milestone / 2),
+                    color
+                );
+            }
+        }
+    }
+}
+
 // Update ball positions and check for collisions
 function updateBalls() {
     for (let i = GameState.balls.length - 1; i >= 0; i--) {
@@ -410,12 +456,15 @@ function updateBalls() {
             GameState.player2PaddleHeight,
             GameState.canvasWidth,
             GameState.canvasHeight,
-            GameState.applyScreenShake.bind(GameState)
+            GameState.applyScreenShake.bind(GameState),
+            GameState.rallyCount // Pass rally count for combo-based effects
         );
         
         // Update rally count if paddle hit
         if (collisionData.paddleHit) {
+            const prevCount = GameState.rallyCount;
             GameState.rallyCount += collisionData.rallyIncrement;
+            handleComboMilestones(prevCount, GameState.rallyCount, ball);
         }
         
         // Handle scoring
