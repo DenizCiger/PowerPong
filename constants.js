@@ -11,7 +11,7 @@ export const POWERUP_MAX = 4; // Allow more power-ups at once
 
 // Playground mode constants
 export const PLAYGROUND_MAX_POWERUPS = 5; // Maximum powerups in playground mode
-export const PLAYGROUND_MAX_HAZARDS = 5;  // Maximum hazards in playground mode
+export const PLAYGROUND_MAX_HAZARDS = 50;  // Maximum hazards in playground mode
 export const PLAYGROUND_SPAWN_CHANCE = 0.015; // Increased spawn chance for testing
 
 // Rest of the constants

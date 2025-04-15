@@ -15,8 +15,12 @@ const GameState = {
     BALL_RADIUS: Constants.BALL_RADIUS,
     BALL_SPEED: Constants.BALL_SPEED,
     PADDLE_SPEED: Constants.PADDLE_SPEED,
-      // Playground mode state
+    
+    // Game modes
     playgroundMode: false,
+    autoMode: false,  // When true, both players are CPU controlled
+    
+    // Playground mode state
     playgroundPowerUpIndex: -1, // -1 means no powerups will spawn
     playgroundHazardIndex: -1,  // -1 means no hazards will spawn
     
@@ -204,19 +208,65 @@ function updateScreenShake() {
 
 // Update paddle positions
 function updatePaddles() {
-    if (GameState.keys.w && GameState.player1Y > 0) {
-        GameState.player1Y -= GameState.player1PaddleSpeed;
+    if (GameState.autoMode) {
+        // Find the most relevant ball to track (closest one heading towards each paddle)
+        let player1Target = GameState.canvasHeight / 2;
+        let player2Target = GameState.canvasHeight / 2;
+        
+        GameState.balls.forEach(ball => {
+            // For player 1, track balls moving left
+            if (ball.speedX < 0) {
+                const timeToReach = (ball.x - GameState.PADDLE_MARGIN) / -ball.speedX;
+                const predictedY = ball.y + ball.speedY * timeToReach;
+                if (timeToReach > 0) {
+                    player1Target = predictedY;
+                }
+            }
+            // For player 2, track balls moving right
+            else if (ball.speedX > 0) {
+                const timeToReach = (GameState.canvasWidth - GameState.PADDLE_MARGIN - GameState.PADDLE_WIDTH - ball.x) / ball.speedX;
+                const predictedY = ball.y + ball.speedY * timeToReach;
+                if (timeToReach > 0) {
+                    player2Target = predictedY;
+                }
+            }
+        });
+        
+        // Update CPU-controlled paddle positions
+        GameState.player1Y = updateCPUPaddle(GameState.player1Y, GameState.player1PaddleHeight, player1Target, GameState.player1PaddleSpeed);
+        GameState.player2Y = updateCPUPaddle(GameState.player2Y, GameState.player2PaddleHeight, player2Target, GameState.player2PaddleSpeed);
+    } else {
+        // Normal player controls
+        if (GameState.keys.w && GameState.player1Y > 0) {
+            GameState.player1Y -= GameState.player1PaddleSpeed;
+        }
+        if (GameState.keys.s && GameState.player1Y + GameState.player1PaddleHeight < GameState.canvasHeight) {
+            GameState.player1Y += GameState.player1PaddleSpeed;
+        }
+        
+        if (GameState.keys.arrowup && GameState.player2Y > 0) {
+            GameState.player2Y -= GameState.player2PaddleSpeed;
+        }
+        if (GameState.keys.arrowdown && GameState.player2Y + GameState.player2PaddleHeight < GameState.canvasHeight) {
+            GameState.player2Y += GameState.player2PaddleSpeed;
+        }
     }
-    if (GameState.keys.s && GameState.player1Y + GameState.player1PaddleHeight < GameState.canvasHeight) {
-        GameState.player1Y += GameState.player1PaddleSpeed;
+}
+
+// CPU paddle movement logic
+function updateCPUPaddle(paddleY, paddleHeight, targetY, paddleSpeed) {
+    // Add some reaction delay/imperfection to make it more natural
+    const reactionThreshold = 10;
+    const paddleCenter = paddleY + paddleHeight / 2;
+      if (Math.abs(paddleCenter - targetY) > reactionThreshold) {
+        // Move towards the target
+        if (paddleCenter < targetY) {
+            return Math.min(paddleY + paddleSpeed, GameState.canvasHeight - paddleHeight);
+        } else {
+            return Math.max(paddleY - paddleSpeed, 0);
+        }
     }
-    
-    if (GameState.keys.arrowup && GameState.player2Y > 0) {
-        GameState.player2Y -= GameState.player2PaddleSpeed;
-    }
-    if (GameState.keys.arrowdown && GameState.player2Y + GameState.player2PaddleHeight < GameState.canvasHeight) {
-        GameState.player2Y += GameState.player2PaddleSpeed;
-    }
+    return paddleY;
 }
 
 // Draw ball trails
@@ -549,21 +599,33 @@ window.addEventListener('keydown', (e) => {
         GameState.keys[key] = true;
     }
     
-    if (e.key === ' ' && !GameState.gameRunning) {
+    // Handle game start
+    if (key === ' ' && !GameState.gameRunning) {
         startGame();
-    }    // Playground mode controls
-    if (e.key === 'p' && e.altKey) {
+    }
+    
+    // Handle game modes
+    if (key === 'p' && e.altKey) {
         e.preventDefault(); // Prevent the 'p' key from triggering pause
         GameState.playgroundMode = !GameState.playgroundMode;
         UI.showNotification(
             `Playground Mode: ${GameState.playgroundMode ? 'ON' : 'OFF'}`,
             GameState.playgroundMode ? '#00aa00' : '#aa0000'
         );
+    } else if (key === 'a' && e.altKey) {
+        e.preventDefault();
+        GameState.autoMode = !GameState.autoMode;
+        UI.showNotification(
+            `Auto Mode: ${GameState.autoMode ? 'ON' : 'OFF'}`,
+            GameState.autoMode ? '#00aaaa' : '#666666'
+        );
     }
+    
+    // Handle playground mode controls
     if (GameState.playgroundMode && GameState.gameRunning) {
         if (key === 'n' || key === 'm') {
             if (e.shiftKey) {
-                // Cycle through hazards and clear existing ones
+                // Cycle through hazards
                 if (key === 'n') {
                     GameState.playgroundHazardIndex = (GameState.playgroundHazardIndex <= -1) ? 
                         Constants.hazardTypes.length - 1 : GameState.playgroundHazardIndex - 1;
@@ -571,7 +633,6 @@ window.addEventListener('keydown', (e) => {
                     GameState.playgroundHazardIndex = (GameState.playgroundHazardIndex >= Constants.hazardTypes.length - 1) ? 
                         -1 : GameState.playgroundHazardIndex + 1;
                 }
-                // Clear all active hazards
                 GameState.activeHazards = [];
                 UI.showNotification(
                     GameState.playgroundHazardIndex === -1 ? 
@@ -580,7 +641,7 @@ window.addEventListener('keydown', (e) => {
                     GameState.playgroundHazardIndex === -1 ? '#666666' : '#4488ff'
                 );
             } else {
-                // Cycle through powerups and clear existing ones
+                // Cycle through powerups
                 if (key === 'n') {
                     GameState.playgroundPowerUpIndex = (GameState.playgroundPowerUpIndex <= -1) ? 
                         Constants.powerUpTypes.length - 1 : GameState.playgroundPowerUpIndex - 1;
@@ -588,7 +649,6 @@ window.addEventListener('keydown', (e) => {
                     GameState.playgroundPowerUpIndex = (GameState.playgroundPowerUpIndex >= Constants.powerUpTypes.length - 1) ? 
                         -1 : GameState.playgroundPowerUpIndex + 1;
                 }
-                // Clear all active powerups
                 GameState.activePowerUps = [];
                 UI.showNotification(
                     GameState.playgroundPowerUpIndex === -1 ? 
@@ -603,7 +663,6 @@ window.addEventListener('keydown', (e) => {
 
 window.addEventListener('keyup', (e) => {
     const key = e.key.toLowerCase();
-    // Special handling for arrow keys
     if (key === 'arrowup' || key === 'arrowdown') {
         GameState.keys[key] = false;
     } else if (key in GameState.keys) {
