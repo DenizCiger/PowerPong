@@ -365,44 +365,51 @@ body {
     font-size: 14px;
 }
 
-/* Shape styles for power-up icons */
-.shape {
-    width: 100%;
-    height: 100%;
+/* Specific hazard icon styles */
+.hazard-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+    position: relative;
 }
 
-.shape.triangle {
-    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+/* Black Hole */
+.hazard-icon.gravity {
+    background-color: #12001e;
 }
 
-.shape.triangle-down {
-    clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+/* White Hole */
+.hazard-icon.whiteHole {
+    background-color: #e0ffff;
 }
 
-.shape.rectangle {
-    clip-path: polygon(0% 25%, 100% 25%, 100% 75%, 0% 75%);
+/* Wind Zone */
+.hazard-icon.wind {
+    background-color: #9cc3e6;
 }
 
-.shape.diamond {
-    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+/* Barrier */
+.hazard-icon.barrier {
+    background-color: #c41230;
 }
 
-.shape.circle {
-    border-radius: 50%;
+/* Portal */
+.hazard-icon.portal {
+    background-color: #ff9933;
 }
 
-.shape.star {
-    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+/* Hide all the special effects */
+.gravity-swirl,
+.whiteHole-rays,
+.wind-lines,
+.barrier-segments-container,
+.portal-swirl,
+.portal-center {
+    display: none;
 }
-
-.shape.hexagon {
-    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
-}
-
 /* Special power-up styling */
 .power-up-item.special {
     background: linear-gradient(45deg, rgba(40,20,0,0.8), rgba(60,20,20,0.8));
@@ -446,240 +453,46 @@ body {
 .hazard-icon {
     width: 50px;
     height: 50px;
-    border-radius: 50%;
+    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
 }
 
-.hazard-info {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.hazard-info strong {
-    color: #ffffff;
-    font-size: 16px;
-}
-
-.hazard-info span {
-    color: #aaccff;
-    font-size: 14px;
-}
-
-/* Specific hazard icon styles */
 /* Black Hole */
-.gravity {
-    background: #12001e;
-    box-shadow: 0 0 20px rgba(120, 20, 200, 0.6);
-    overflow: hidden;
-    position: relative;
-}
-
-.gravity::before {
-    content: '';
-    position: absolute;
-    width: 140%;
-    height: 140%;
-    top: -20%;
-    left: -20%;
-    background: 
-        radial-gradient(
-            circle, 
-            rgba(80, 0, 120, 0.5) 10%, 
-            transparent 70%
-        ),
-        conic-gradient(
-            from 0deg,
-            transparent 0%,
-            rgba(180, 80, 220, 0.4) 20%,
-            transparent 40%,
-            rgba(100, 0, 180, 0.4) 60%,
-            transparent 80%
-        );
-    animation: spin 12s linear infinite;
-    opacity: 0.7;
-}
-
-.gravity-swirl {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: transparent;
-    z-index: 1;
-}
-
-.gravity::after {
-    content: '';
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    background: black;
-    border-radius: 50%;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 0 10px 2px rgba(120, 0, 200, 0.7);
-    z-index: 2;
+.hazard-icon.gravity {
+    background-color: #12001e;
 }
 
 /* White Hole */
-.whiteHole {
-    background: #e0ffff;
-    box-shadow: 0 0 20px rgba(100, 200, 255, 0.8);
-    overflow: hidden;
-    position: relative;
-}
-
-.whiteHole::before {
-    content: '';
-    position: absolute;
-    width: 200%;
-    height: 200%;
-    top: -50%;
-    left: -50%;
-    background: radial-gradient(
-        circle, 
-        rgba(255, 255, 255, 1) 0%,
-        rgba(200, 255, 255, 0.8) 20%,
-        rgba(150, 220, 255, 0.5) 30%,
-        transparent 70%
-    );
-    animation: pulseSlowly 3s ease-in-out infinite alternate;
-}
-
-.whiteHole-rays {
-    position: absolute;
-    width: 180%;
-    height: 180%;
-    top: -40%;
-    left: -40%;
-    background: repeating-conic-gradient(
-        from 0deg,
-        rgba(255, 255, 255, 0) 0deg,
-        rgba(255, 255, 255, 0) 10deg,
-        rgba(200, 240, 255, 0.9) 15deg,
-        rgba(255, 255, 255, 0) 20deg
-    );
-    animation: spin 10s linear infinite reverse;
+.hazard-icon.whiteHole {
+    background-color: #e0ffff;
 }
 
 /* Wind Zone */
-.wind {
-    background: linear-gradient(135deg, #9cc3e6, #cfe2f3);
-    box-shadow: 0 0 15px rgba(130, 180, 230, 0.7);
-    overflow: hidden;
-    position: relative;
-}
-
-.wind-lines {
-    position: absolute;
-    width: 300%;
-    height: 100%;
-    background: repeating-linear-gradient(
-        70deg,
-        transparent,
-        transparent 8px,
-        rgba(230, 240, 255, 0.8) 8px,
-        rgba(230, 240, 255, 0.8) 12px
-    );
-    animation: windMove 2s linear infinite;
-}
-
-.wind::after {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-        to right,
-        transparent 20%,
-        rgba(255, 255, 255, 0.5) 50%,
-        transparent 80%
-    );
+.hazard-icon.wind {
+    background-color: #9cc3e6;
 }
 
 /* Barrier */
-.barrier {
-    background: linear-gradient(45deg, #c41230, #e63946);
-    box-shadow: 0 0 15px rgba(230, 40, 70, 0.6);
-    border-radius: 5px;
-    position: relative;
-    overflow: hidden;
-}
-
-.barrier::before {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-        to bottom right,
-        rgba(255, 255, 255, 0.3) 0%,
-        transparent 80%
-    );
-}
-
-.barrier-segments-container {
-    width: 80%;
-    height: 85%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    position: relative;
-    z-index: 2;
-}
-
-.barrier-segment {
-    width: 100%;
-    height: 22%;
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95), rgba(230, 230, 230, 0.9));
-    border-radius: 2px;
-    box-shadow: 
-        inset 0 1px 2px rgba(255, 255, 255, 0.5),
-        0 2px 2px rgba(0, 0, 0, 0.2);
+.hazard-icon.barrier {
+    background-color: #c41230;
 }
 
 /* Portal */
-.portal {
-    background: linear-gradient(to bottom right, #ffcc80, #ff9d42);
-    box-shadow: 0 0 20px rgba(255, 160, 0, 0.7);
-    overflow: hidden;
-    position: relative;
+.hazard-icon.portal {
+    background-color: #ff9933;
 }
 
-.portal-swirl {
-    position: absolute;
-    width: 140%;
-    height: 140%;
-    top: -20%;
-    left: -20%;
-    background: 
-        conic-gradient(
-            from 0deg,
-            rgba(255, 240, 200, 0.9) 0%,
-            rgba(255, 180, 100, 0.8) 25%,
-            rgba(255, 120, 50, 0.7) 50%,
-            rgba(255, 180, 100, 0.8) 75%,
-            rgba(255, 240, 200, 0.9) 100%
-        );
-    animation: spin 6s linear infinite;
-}
-
+/* Hide all the special effects */
+.gravity-swirl,
+.whiteHole-rays,
+.wind-lines,
+.barrier-segments-container,
+.portal-swirl,
 .portal-center {
-    position: absolute;
-    width: 15px;
-    height: 15px;
-    background: white;
-    border-radius: 50%;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.9);
-    z-index: 2;
-    animation: pulseGently 1s infinite alternate;
+    display: none;
 }
 
 /* Danger Mode Section */

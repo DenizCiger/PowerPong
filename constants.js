@@ -8,6 +8,13 @@ export const PADDLE_SPEED = 8;
 export const POWERUP_SIZE = 30;
 export const POWERUP_SPAWN_CHANCE = 0.008; // Increased chance for more action
 export const POWERUP_MAX = 4; // Allow more power-ups at once
+
+// Playground mode constants
+export const PLAYGROUND_MAX_POWERUPS = 5; // Maximum powerups in playground mode
+export const PLAYGROUND_MAX_HAZARDS = 5;  // Maximum hazards in playground mode
+export const PLAYGROUND_SPAWN_CHANCE = 0.015; // Increased spawn chance for testing
+
+// Rest of the constants
 export const POWERUP_DURATION = 7000; // 7 seconds
 export const POWERUP_PARTICLE_COUNT = 8; // Particles created when powerup is collected
 export const BALL_ACCELERATION = 0.5; // Ball gets faster with each paddle hit

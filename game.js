@@ -15,6 +15,10 @@ const GameState = {
     BALL_RADIUS: Constants.BALL_RADIUS,
     BALL_SPEED: Constants.BALL_SPEED,
     PADDLE_SPEED: Constants.PADDLE_SPEED,
+      // Playground mode state
+    playgroundMode: false,
+    playgroundPowerUpIndex: -1, // -1 means no powerups will spawn
+    playgroundHazardIndex: -1,  // -1 means no hazards will spawn
     
     // Game state variables
     gameRunning: false,
@@ -318,20 +322,25 @@ function updateBalls() {
         if (isNaN(ball.speedX) || isNaN(ball.speedY)) {
             ball.speedX = Constants.BALL_SPEED * (Math.random() > 0.5 ? 1 : -1);
             ball.speedY = Constants.BALL_SPEED * (Math.random() * 0.8 - 0.4);
-        }
-
-        // Apply curve effect if active
+        }        // Apply curve effect if active
         if (ball.curveActive) {
             const elapsedTime = Date.now() - ball.curveStartTime;
             if (elapsedTime > Constants.POWERUP_DURATION) {
                 ball.curveActive = false; // Disable curve effect after duration
+                ball.curveAngle = 0; // Reset curve angle
             } else {
-                // Apply a gradual curve force that increases over time
-                const maxCurveForce = 1.2; // Increased from 0.3 for a stronger effect
-                const curveFactor = elapsedTime / Constants.POWERUP_DURATION; // Progress from 0 to 1
+                // Create a smooth oscillating curve effect
+                const maxCurveForce = 0.4; // Reduced for better control
+                const curvePeriod = 2000; // Complete one curve cycle every 2 seconds
+                const curveAngle = (elapsedTime % curvePeriod) / curvePeriod * Math.PI * 2;
                 
-                // Apply force downwards (positive Y direction)
-                ball.speedY += curveFactor * maxCurveForce; 
+                // Apply sinusoidal force perpendicular to ball's motion
+                const direction = Math.atan2(ball.speedY, ball.speedX);
+                const perpendicular = direction + Math.PI/2;
+                const forceMagnitude = Math.sin(curveAngle) * maxCurveForce;
+                
+                ball.speedX += Math.cos(perpendicular) * forceMagnitude;
+                ball.speedY += Math.sin(perpendicular) * forceMagnitude;
             }
         }
 
@@ -432,18 +441,18 @@ function gameLoop(timestamp) {
                 GameState.balls, 
                 GameState.activePowerUps,
                 (type, player) => PowerUps.applyPowerUp(type, player, GameState)
-            );
-            GameState.activePowerUps = PowerUps.spawnPowerUps(
+            );            GameState.activePowerUps = PowerUps.spawnPowerUps(
                 GameState.activePowerUps,
                 GameState.canvasWidth,
                 GameState.canvasHeight,
-                GameState.dangerMode
-            );
-            GameState.activeHazards = Hazards.spawnHazards(
+                GameState.dangerMode,
+                GameState
+            );GameState.activeHazards = Hazards.spawnHazards(
                 GameState.activeHazards, 
                 GameState.canvasWidth,
                 GameState.canvasHeight,
-                GameState.dangerMode
+                GameState.dangerMode,
+                GameState
             );
         }
         
@@ -542,6 +551,53 @@ window.addEventListener('keydown', (e) => {
     
     if (e.key === ' ' && !GameState.gameRunning) {
         startGame();
+    }
+
+    // Playground mode controls
+    if (e.key === 'p' && e.altKey) {
+        GameState.playgroundMode = !GameState.playgroundMode;
+        UI.showNotification(
+            `Playground Mode: ${GameState.playgroundMode ? 'ON' : 'OFF'}`,
+            GameState.playgroundMode ? '#00aa00' : '#aa0000'
+        );
+    }    if (GameState.playgroundMode && GameState.gameRunning) {
+        if (key === 'n' || key === 'm') {
+            if (e.shiftKey) {
+                // Cycle through hazards and clear existing ones
+                if (key === 'n') {
+                    GameState.playgroundHazardIndex = (GameState.playgroundHazardIndex <= -1) ? 
+                        Constants.hazardTypes.length - 1 : GameState.playgroundHazardIndex - 1;
+                } else {
+                    GameState.playgroundHazardIndex = (GameState.playgroundHazardIndex >= Constants.hazardTypes.length - 1) ? 
+                        -1 : GameState.playgroundHazardIndex + 1;
+                }
+                // Clear all active hazards
+                GameState.activeHazards = [];
+                UI.showNotification(
+                    GameState.playgroundHazardIndex === -1 ? 
+                        'Hazards: Disabled' : 
+                        `Selected Hazard: ${Constants.hazardTypes[GameState.playgroundHazardIndex].type}`,
+                    GameState.playgroundHazardIndex === -1 ? '#666666' : '#4488ff'
+                );
+            } else {
+                // Cycle through powerups and clear existing ones
+                if (key === 'n') {
+                    GameState.playgroundPowerUpIndex = (GameState.playgroundPowerUpIndex <= -1) ? 
+                        Constants.powerUpTypes.length - 1 : GameState.playgroundPowerUpIndex - 1;
+                } else {
+                    GameState.playgroundPowerUpIndex = (GameState.playgroundPowerUpIndex >= Constants.powerUpTypes.length - 1) ? 
+                        -1 : GameState.playgroundPowerUpIndex + 1;
+                }
+                // Clear all active powerups
+                GameState.activePowerUps = [];
+                UI.showNotification(
+                    GameState.playgroundPowerUpIndex === -1 ? 
+                        'Power-ups: Disabled' : 
+                        `Selected Power-up: ${Constants.powerUpTypes[GameState.playgroundPowerUpIndex].type}`,
+                    GameState.playgroundPowerUpIndex === -1 ? '#666666' : '#44ff88'
+                );
+            }
+        }
     }
 });
 

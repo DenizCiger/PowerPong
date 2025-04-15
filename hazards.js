@@ -1,21 +1,29 @@
-import { BALL_RADIUS, VORTEX_RADIUS, BARRIER_HEIGHT, BARRIER_WIDTH, hazardTypes, HAZARD_MAX, HAZARD_SPAWN_RATE, GRAVITY_STRENGTH, WIND_STRENGTH } from './constants.js';
+import { BALL_RADIUS, VORTEX_RADIUS, BARRIER_HEIGHT, BARRIER_WIDTH, hazardTypes, HAZARD_MAX, HAZARD_SPAWN_RATE, GRAVITY_STRENGTH, WIND_STRENGTH, PLAYGROUND_MAX_HAZARDS, PLAYGROUND_SPAWN_CHANCE } from './constants.js';
 import { createTeleportEffect, createParticles } from './particles.js';
 import { showHazardNotification } from './ui.js';
 
 // Spawn hazards with random chance
-export function spawnHazards(activeHazards, canvasWidth, canvasHeight, dangerMode) {
+export function spawnHazards(activeHazards, canvasWidth, canvasHeight, dangerMode, gameState) {
     // Don't spawn hazards if max reached
-    if (activeHazards.length >= HAZARD_MAX) return activeHazards;
+    const maxHazards = gameState.playgroundMode ? PLAYGROUND_MAX_HAZARDS : HAZARD_MAX;
+    if (activeHazards.length >= maxHazards) return activeHazards;
     
     // Clone the active hazards array
     let updatedHazards = [...activeHazards];
     
-    // Increase chance of hazards in danger mode
-    let spawnChance = dangerMode ? HAZARD_SPAWN_RATE * 2 : HAZARD_SPAWN_RATE;
-    
-    if (Math.random() < spawnChance) {
-        // Choose random hazard type
-        const hazardIndex = Math.floor(Math.random() * hazardTypes.length);
+    // Adjust spawn chance based on mode
+    let spawnChance;
+    if (gameState.playgroundMode) {
+        spawnChance = PLAYGROUND_SPAWN_CHANCE;
+    } else {
+        spawnChance = dangerMode ? HAZARD_SPAWN_RATE * 2 : HAZARD_SPAWN_RATE;
+    }
+      if (Math.random() < spawnChance && 
+        !(gameState.playgroundMode && gameState.playgroundHazardIndex === -1)) {
+        // Choose hazard type based on mode
+        const hazardIndex = gameState.playgroundMode ? 
+            gameState.playgroundHazardIndex : 
+            Math.floor(Math.random() * hazardTypes.length);
         const hazardTemplate = hazardTypes[hazardIndex];
         
         // Make sure we don't place hazards too close to paddles

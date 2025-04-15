@@ -1,4 +1,4 @@
-import { POWERUP_SPAWN_CHANCE, POWERUP_MAX, powerUpTypes, BALL_RADIUS, POWERUP_SIZE, POWERUP_DURATION } from './constants.js';
+import { POWERUP_SPAWN_CHANCE, POWERUP_MAX, powerUpTypes, BALL_RADIUS, POWERUP_SIZE, POWERUP_DURATION, PLAYGROUND_SPAWN_CHANCE, PLAYGROUND_MAX_POWERUPS } from './constants.js';
 import { player1EffectsEl, player2EffectsEl } from './ui.js';
 
 // Check for ball collision with power-ups
@@ -83,19 +83,22 @@ function createPowerUpCollectionEffect(powerUp) {
 }
 
 // Spawn power-ups with intensity-based probabilities
-export function spawnPowerUps(activePowerUps, canvasWidth, canvasHeight, dangerMode) {
-    let spawnChance = POWERUP_SPAWN_CHANCE;
+export function spawnPowerUps(activePowerUps, canvasWidth, canvasHeight, dangerMode, gameState) {
+    let spawnChance = gameState.playgroundMode ? PLAYGROUND_SPAWN_CHANCE : POWERUP_SPAWN_CHANCE;
+    let maxPowerups = gameState.playgroundMode ? PLAYGROUND_MAX_POWERUPS : POWERUP_MAX;
     let updatedPowerUps = [...activePowerUps];
     
-    // Increase spawn chance in danger mode
-    if (dangerMode) {
+    // Increase spawn chance in danger mode (only in normal mode)
+    if (dangerMode && !gameState.playgroundMode) {
         spawnChance *= 1.5;
     }
-    
-    if (Math.random() < spawnChance && updatedPowerUps.length < POWERUP_MAX) {
-        // Choose power-up type, with Fury being rare but more common in danger mode
+      if (Math.random() < spawnChance && updatedPowerUps.length < maxPowerups && 
+        !(gameState.playgroundMode && gameState.playgroundPowerUpIndex === -1)) {
+        // Choose power-up type based on mode
         let powerUpIndex;
-        if (dangerMode && Math.random() < 0.2) {
+        if (gameState.playgroundMode) {
+            powerUpIndex = gameState.playgroundPowerUpIndex;
+        } else if (dangerMode && Math.random() < 0.2) {
             // In danger mode, 20% chance for fury power-up
             powerUpIndex = powerUpTypes.findIndex(p => p.type === 'fury');
         } else {
