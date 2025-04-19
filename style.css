@@ -164,6 +164,7 @@ body {
     animation: titlePulse 3s infinite;
     background: linear-gradient(to right, #4488ff, #ffffff, #ff4444);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     filter: drop-shadow(0 0 8px rgba(100, 150, 255, 0.8));
 }
@@ -252,6 +253,7 @@ body {
     margin-bottom: 30px;
     background: linear-gradient(45deg, #4488ff, #ffffff, #ff4444);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     text-shadow: 0 0 15px rgba(100, 150, 255, 0.5);
 }
