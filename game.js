@@ -209,30 +209,31 @@ function updateScreenShake() {
 // Update paddle positions
 function updatePaddles(deltaTime) {
     if (GameState.autoMode) {
-        // Find the most relevant ball to track (closest one heading towards each paddle)
         let player1Target = GameState.canvasHeight / 2;
         let player2Target = GameState.canvasHeight / 2;
-        
         GameState.balls.forEach(ball => {
-            // For player 1, track balls moving left
             if (ball.speedX < 0) {
-                const timeToReach = (ball.x - GameState.PADDLE_MARGIN) / -ball.speedX;
-                const predictedY = ball.y + ball.speedY * timeToReach;
-                if (timeToReach > 0) {
-                    player1Target = predictedY;
-                }
-            }
-            // For player 2, track balls moving right
-            else if (ball.speedX > 0) {
-                const timeToReach = (GameState.canvasWidth - GameState.PADDLE_MARGIN - GameState.PADDLE_WIDTH - ball.x) / ball.speedX;
-                const predictedY = ball.y + ball.speedY * timeToReach;
-                if (timeToReach > 0) {
-                    player2Target = predictedY;
-                }
+                // Use hazard-aware prediction for player 1
+                const predictedY = predictBallYWithHazards(
+                    ball,
+                    GameState.PADDLE_MARGIN + GameState.PADDLE_WIDTH / 2,
+                    GameState.activeHazards,
+                    GameState.canvasWidth,
+                    GameState.canvasHeight
+                );
+                player1Target = predictedY;
+            } else if (ball.speedX > 0) {
+                // Use hazard-aware prediction for player 2
+                const predictedY = predictBallYWithHazards(
+                    ball,
+                    GameState.canvasWidth - GameState.PADDLE_MARGIN - GameState.PADDLE_WIDTH / 2,
+                    GameState.activeHazards,
+                    GameState.canvasWidth,
+                    GameState.canvasHeight
+                );
+                player2Target = predictedY;
             }
         });
-        
-        // Update CPU-controlled paddle positions
         GameState.player1Y = updateCPUPaddle(GameState.player1Y, GameState.player1PaddleHeight, player1Target, GameState.player1PaddleSpeed * (deltaTime/16.67));
         GameState.player2Y = updateCPUPaddle(GameState.player2Y, GameState.player2PaddleHeight, player2Target, GameState.player2PaddleSpeed * (deltaTime/16.67));
     } else {
@@ -732,6 +733,163 @@ window.addEventListener('keyup', (e) => {
         GameState.keys[key] = false;
     }
 });
+
+// Predict the ball's Y position at the paddle, considering hazards (with moving barriers)
+function predictBallYWithHazards(ball, paddleX, activeHazards, canvasWidth, canvasHeight) {
+    let simBall = { ...ball };
+    let simHazards = activeHazards.map(h => h.type === 'barrier' && h.velocity ? { ...h, velocity: { ...h.velocity } } : { ...h });
+    let steps = 0;
+    const maxSteps = 500;
+    const dt = 1;
+    let lastPortalId = null;
+    let portalChainCount = 0;
+    let trappedInBlackHole = false;
+    let blackHoleEjectStep = 0;
+    let blackHoleEjectParams = null;
+    let blackHoleEjectAngles = [];
+    let blackHoleEjectResults = [];
+    const MAX_PORTAL_CHAIN = 3;
+    const BLACK_HOLE_EJECTION_SAMPLES = 5;
+    while (steps < maxSteps) {
+        if ((ball.speedX < 0 && simBall.x <= paddleX) || (ball.speedX > 0 && simBall.x >= paddleX)) {
+            break;
+        }
+        // Move barriers if they have velocity
+        simHazards.forEach(hazard => {
+            if (hazard.type === 'barrier' && hazard.velocity) {
+                hazard.y += hazard.velocity.y * (dt * 0.8);
+                hazard.x += hazard.velocity.x * (dt * 0.8);
+                if (hazard.y < 0 || hazard.y + 80 > canvasHeight) {
+                    hazard.velocity.y = -hazard.velocity.y;
+                }
+                if (hazard.x < 0 || hazard.x + 20 > canvasWidth) {
+                    hazard.velocity.x = -hazard.velocity.x;
+                }
+            }
+        });
+        const prevX = simBall.x;
+        const prevY = simBall.y;
+        // Black hole trapping simulation (multi-angle)
+        if (trappedInBlackHole) {
+            if (blackHoleEjectStep < 120) {
+                blackHoleEjectStep++;
+                steps++;
+                continue;
+            } else {
+                // Simulate multiple ejection angles
+                if (blackHoleEjectAngles.length === 0) {
+                    for (let i = 0; i < BLACK_HOLE_EJECTION_SAMPLES; i++) {
+                        blackHoleEjectAngles.push(Math.PI * 2 * (i / BLACK_HOLE_EJECTION_SAMPLES));
+                    }
+                }
+                for (let angle of blackHoleEjectAngles) {
+                    let testBall = { ...simBall };
+                    testBall.x = blackHoleEjectParams.x + Math.cos(angle) * 60;
+                    testBall.y = blackHoleEjectParams.y + Math.sin(angle) * 60;
+                    testBall.speedX = Math.cos(angle) * blackHoleEjectParams.ejectSpeed;
+                    testBall.speedY = Math.sin(angle) * blackHoleEjectParams.ejectSpeed;
+                    // Simulate a short path after ejection
+                    let localSteps = 0;
+                    while (localSteps < 40) {
+                        testBall.x += testBall.speedX * dt * 0.8;
+                        testBall.y += testBall.speedY * dt * 0.8;
+                        if (testBall.y < 0) { testBall.y = -testBall.y; testBall.speedY = -testBall.speedY; }
+                        if (testBall.y > canvasHeight) { testBall.y = 2 * canvasHeight - testBall.y; testBall.speedY = -testBall.speedY; }
+                        localSteps++;
+                    }
+                    blackHoleEjectResults.push(testBall.y);
+                }
+                // Use the average Y of all ejection samples
+                return blackHoleEjectResults.reduce((a, b) => a + b, 0) / blackHoleEjectResults.length;
+            }
+        }
+        // Apply hazard effects (approximate)
+        for (const hazard of simHazards) {
+            const dx = simBall.x - hazard.x;
+            const dy = simBall.y - hazard.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            switch (hazard.type) {
+                case 'blackHole':
+                    if (distance < 24) {
+                        trappedInBlackHole = true;
+                        blackHoleEjectStep = 0;
+                        blackHoleEjectParams = {
+                            x: hazard.x,
+                            y: hazard.y,
+                            ejectSpeed: 8 + Math.random() * 4
+                        };
+                        break;
+                    }
+                    if (distance < 120) {
+                        const strength = (1 - distance / 120) * 0.5;
+                        simBall.speedX -= dx / distance * strength;
+                        simBall.speedY -= dy / distance * strength;
+                    }
+                    break;
+                case 'whiteHole':
+                    if (distance < 120) {
+                        const strength = (1 - distance / 120) * 0.8;
+                        simBall.speedX += dx / distance * strength;
+                        simBall.speedY += dy / distance * strength;
+                    }
+                    break;
+                case 'windZone':
+                    if (Math.abs(dx) < 75 && Math.abs(dy) < 75) {
+                        simBall.speedX += hazard.direction.x * 0.5;
+                        simBall.speedY += hazard.direction.y * 0.5;
+                    }
+                    break;
+                case 'barrier':
+                    // Improved bounce: reflect based on entry angle
+                    if (
+                        simBall.x + 8 > hazard.x &&
+                        simBall.x - 8 < hazard.x + 20 &&
+                        simBall.y + 8 > hazard.y &&
+                        simBall.y - 8 < hazard.y + 80
+                    ) {
+                        // Determine which side was hit
+                        const overlapLeft = Math.abs(simBall.x + 8 - hazard.x);
+                        const overlapRight = Math.abs(simBall.x - 8 - (hazard.x + 20));
+                        const overlapTop = Math.abs(simBall.y + 8 - hazard.y);
+                        const overlapBottom = Math.abs(simBall.y - 8 - (hazard.y + 80));
+                        const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+                        if (minOverlap === overlapLeft || minOverlap === overlapRight) {
+                            simBall.speedX = -simBall.speedX;
+                        } else {
+                            simBall.speedY = -simBall.speedY;
+                        }
+                        // Nudge ball out of barrier
+                        if (minOverlap === overlapLeft) simBall.x = hazard.x - 8;
+                        if (minOverlap === overlapRight) simBall.x = hazard.x + 20 + 8;
+                        if (minOverlap === overlapTop) simBall.y = hazard.y - 8;
+                        if (minOverlap === overlapBottom) simBall.y = hazard.y + 80 + 8;
+                    }
+                    break;
+                case 'portal':
+                    const portalRadius = 30;
+                    const crossed =
+                        ((prevX - hazard.x) ** 2 + (prevY - hazard.y) ** 2 > portalRadius ** 2) &&
+                        ((simBall.x - hazard.x) ** 2 + (simBall.y - hazard.y) ** 2 <= portalRadius ** 2);
+                    if (crossed && lastPortalId !== hazard.id && portalChainCount < MAX_PORTAL_CHAIN) {
+                        const linked = simHazards.find(h => h.id === hazard.linkedPortalId);
+                        if (linked) {
+                            simBall.x = linked.x;
+                            simBall.y = linked.y;
+                            lastPortalId = linked.id;
+                            portalChainCount++;
+                        }
+                    }
+                    break;
+            }
+        }
+        simBall.x += simBall.speedX * dt * 0.8;
+        simBall.y += simBall.speedY * dt * 0.8;
+        if (simBall.y < 0) { simBall.y = -simBall.y; simBall.speedY = -simBall.speedY; }
+        if (simBall.y > canvasHeight) { simBall.y = 2 * canvasHeight - simBall.y; simBall.speedY = -simBall.speedY; }
+        steps++;
+    }
+    return simBall.y;
+}
 
 // Initialize the game at startup
 initGame();
