@@ -29,6 +29,11 @@ export function showNotification(message, bgColor, position = '30%', duration = 
         document.body.appendChild(container);
     }
 
+    // Remove any existing notifications immediately
+    while (container.firstChild) {
+        container.firstChild.remove();
+    }
+
     // Create notification element
     const notification = document.createElement('div');
     notification.className = 'game-notification-modern';
@@ -36,7 +41,7 @@ export function showNotification(message, bgColor, position = '30%', duration = 
     notification.style.background = bgColor || 'rgba(40, 60, 120, 0.7)';
     notification.style.marginTop = '0px';
     notification.style.marginBottom = '0px';
-    notification.style.transition = 'opacity 0.5s cubic-bezier(.4,2,.6,1), transform 0.5s cubic-bezier(.4,2,.6,1), margin 0.4s cubic-bezier(.4,2,.6,1)';
+    notification.style.transition = 'opacity 0.4s cubic-bezier(.4,2,.6,1), transform 0.4s cubic-bezier(.4,2,.6,1), margin 0.3s cubic-bezier(.4,2,.6,1)';
 
     container.appendChild(notification);
 
@@ -47,41 +52,18 @@ export function showNotification(message, bgColor, position = '30%', duration = 
         notification.style.marginBottom = '10px';
     }, 10);
 
-    // FLIP animation for stack when removing
-    function animateStackOnRemove(removed) {
-        const notifs = Array.from(container.children);
-        // Record first positions
-        const firstRects = notifs.map(n => n.getBoundingClientRect());
-        // Remove the notification
-        removed.remove();
-        // Record last positions
-        const lastRects = Array.from(container.children).map(n => n.getBoundingClientRect());
-        // Invert and play
-        Array.from(container.children).forEach((n, i) => {
-            const dy = firstRects[i+1] ? firstRects[i+1].top - lastRects[i].top : 0;
-            if (dy) {
-                n.style.transition = 'none';
-                n.style.transform = `translateY(${dy}px)`;
-                // Force reflow
-                n.getBoundingClientRect();
-                n.style.transition = 'transform 0.5s cubic-bezier(.4,2,.6,1)';
-                n.style.transform = '';
-            }
-        });
-    }
-
     // Animate out and remove
     setTimeout(() => {
         notification.classList.remove('show');
         notification.style.marginTop = '0px';
         notification.style.marginBottom = '0px';
         setTimeout(() => {
-            animateStackOnRemove(notification);
+            notification.remove();
             // Remove container if empty
             if (container.childElementCount === 0) {
                 container.remove();
             }
-        }, 600);
+        }, 400);
     }, duration);
 
     return notification;
