@@ -439,32 +439,41 @@ function updateBalls(deltaTime) {
         // Apply hazard effects to ball movement
         Hazards.applyHazardEffects(ball, GameState.activeHazards, GameState.applyScreenShake.bind(GameState), deltaTime);
         
-        // Move the ball
-        ball.x += ball.speedX * (deltaTime/16.67);
-        ball.y += ball.speedY * (deltaTime/16.67);
-        
-        // Check collisions with walls and paddles
-        const collisionData = Physics.checkBallCollisions(
-            ball,
-            GameState.player1Y,
-            GameState.player2Y,
-            GameState.player1PaddleHeight,
-            GameState.player2PaddleHeight,
-            GameState.canvasWidth,
-            GameState.canvasHeight,
-            GameState.applyScreenShake.bind(GameState),
-            GameState.rallyCount // Pass rally count for combo-based effects
-        );
-        
-        // Update rally count if paddle hit
-        if (collisionData.paddleHit) {
+        // Calculate intended movement
+        const moveX = ball.speedX * (deltaTime/16.67);
+        const moveY = ball.speedY * (deltaTime/16.67);
+        const maxStep = Constants.BALL_RADIUS; // Max step size
+        const dist = Math.sqrt(moveX * moveX + moveY * moveY);
+        const steps = Math.ceil(dist / maxStep);
+        let collisionData = null;
+        for (let step = 0; step < steps; step++) {
+            // Move a fraction of the total movement
+            const stepX = moveX / steps;
+            const stepY = moveY / steps;
+            ball.x += stepX;
+            ball.y += stepY;
+            // Check collisions with walls and paddles at each sub-step
+            collisionData = Physics.checkBallCollisions(
+                ball,
+                GameState.player1Y,
+                GameState.player2Y,
+                GameState.player1PaddleHeight,
+                GameState.player2PaddleHeight,
+                GameState.canvasWidth,
+                GameState.canvasHeight,
+                GameState.applyScreenShake.bind(GameState),
+                GameState.rallyCount
+            );
+            // If scored, break out early
+            if (collisionData && collisionData.scored) break;
+        }
+        // Check if ball scored or if we need to update the rally count
+        if (collisionData && collisionData.paddleHit) {
             const prevCount = GameState.rallyCount;
             GameState.rallyCount += collisionData.rallyIncrement;
             handleComboMilestones(prevCount, GameState.rallyCount, ball);
         }
-        
-        // Handle scoring
-        if (collisionData.scored) {
+        if (collisionData && collisionData.scored) {
             if (collisionData.scoringPlayer === 1) {
                 GameState.player1Score++;
                 UI.player1ScoreEl.textContent = GameState.player1Score;
@@ -474,7 +483,6 @@ function updateBalls(deltaTime) {
                 UI.player2ScoreEl.textContent = GameState.player2Score;
                 Particles.createScoreAnimation(2, ball.y, GameState.canvasWidth);
             }
-            
             GameState.balls.splice(i, 1);
             if (GameState.balls.length === 0) {
                 resetRound();

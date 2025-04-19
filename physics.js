@@ -31,14 +31,13 @@ export function checkBallCollisions(ball, player1Y, player2Y, player1PaddleHeigh
     if (ball.y - BALL_RADIUS < 0 || ball.y + BALL_RADIUS > canvasHeight) {
         ball.speedY = -ball.speedY;
         collisionData.wallHit = true;
-        
-        // Fix for getting stuck at edges - push the ball away from the edge
+        // Fix for getting stuck at edges - push the ball away from the edge with a larger offset
+        const escapeOffset = Math.max(2, Math.abs(ball.speedY));
         if (ball.y - BALL_RADIUS < 0) {
-            ball.y = BALL_RADIUS + 1; // Push down slightly from top edge
+            ball.y = BALL_RADIUS + escapeOffset;
         } else if (ball.y + BALL_RADIUS > canvasHeight) {
-            ball.y = canvasHeight - BALL_RADIUS - 1; // Push up slightly from bottom edge
+            ball.y = canvasHeight - BALL_RADIUS - escapeOffset;
         }
-        
         if (Math.abs(ball.speedY) > 4) { // Only shake on hard hits
             applyScreenShake();
             createWallHitParticles(ball.x, ball.y, ball.speedY > 0 ? -1 : 1, 8);

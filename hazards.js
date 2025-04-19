@@ -32,10 +32,15 @@ export function spawnHazards(activeHazards, canvasWidth, canvasHeight, dangerMod
         const y = Math.random() * (canvasHeight - 100) + 50;
         
         // Create hazard object
+        let hazardY = y;
+        if (hazardTemplate.type === 'barrier') {
+            // For barriers, generate y so the whole barrier fits in the canvas
+            hazardY = Math.random() * (canvasHeight - BARRIER_HEIGHT);
+        }
         const hazard = {
             ...structuredClone(hazardTemplate),
             x,
-            y,
+            y: hazardY,
             createdAt: Date.now(),
             id: Date.now() + Math.random()
         };
