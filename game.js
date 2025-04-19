@@ -491,6 +491,8 @@ function updateBalls(deltaTime) {
     }
 }
 
+let skipPauseThisFrame = false;
+
 // Main game loop
 function gameLoop(timestamp) {
     // Calculate delta time for consistent movement
@@ -527,10 +529,11 @@ function gameLoop(timestamp) {
     
     if (GameState.gameRunning) {
         // Check for pause toggle
-        if ((GameState.keys.p && !GameState.prevPauseState) || 
-            (GameState.keys.escape && !GameState.prevEscapeState)) {
+        if (!skipPauseThisFrame && ((GameState.keys.p && !GameState.prevPauseState) || 
+            (GameState.keys.escape && !GameState.prevEscapeState))) {
             GameState.togglePause();
         }
+        skipPauseThisFrame = false;
         GameState.prevPauseState = GameState.keys.p;
         GameState.prevEscapeState = GameState.keys.escape;
         
@@ -574,7 +577,7 @@ function gameLoop(timestamp) {
             GameState.player1PaddleHeight,
             GameState.player2PaddleHeight
         );
-        Rendering.drawHazards(GameState.activeHazards, timestamp);
+        Rendering.drawHazards(GameState.activeHazards, timestamp, GameState);
         
         // Only draw dynamic effects if not paused
         if (!GameState.paused) {
@@ -666,6 +669,7 @@ window.addEventListener('keydown', (e) => {
     if (key === 'p' && e.altKey) {
         e.preventDefault(); // Prevent the 'p' key from triggering pause
         GameState.playgroundMode = !GameState.playgroundMode;
+        skipPauseThisFrame = true;
         UI.showNotification(
             `Playground Mode: ${GameState.playgroundMode ? 'ON' : 'OFF'}`,
             GameState.playgroundMode ? '#00aa00' : '#aa0000'

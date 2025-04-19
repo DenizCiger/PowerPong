@@ -223,7 +223,7 @@ export function drawBackgroundStars(backgroundStars, timestamp) {
 }
 
 // Draw all active hazards
-export function drawHazards(activeHazards, timestamp) {
+export function drawHazards(activeHazards, timestamp, GameState) {
     activeHazards.forEach(hazard => {
         switch (hazard.type) {            case 'blackHole':
                 // Create black hole effect with accretion disk
@@ -475,8 +475,8 @@ export function drawHazards(activeHazards, timestamp) {
     
     // Restore context to previous state
     ctx.restore();
-      // Generate minimal wind particles for effect
-    if (Math.random() < 0.15) { // Further reduced for better performance
+    // Generate minimal wind particles for effect only if not paused
+    if (!GameState.paused && Math.random() < 0.15) {
         Particles.createWindParticles(
             hazard.x, 
             hazard.y, 
