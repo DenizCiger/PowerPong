@@ -442,7 +442,8 @@ function updateBalls(deltaTime) {
         // Calculate intended movement
         const moveX = ball.speedX * (deltaTime/16.67);
         const moveY = ball.speedY * (deltaTime/16.67);
-        const maxStep = Constants.BALL_RADIUS; // Max step size
+        // Use a smaller maxStep for higher precision at high speeds
+        const maxStep = Constants.BALL_RADIUS * 0.4; // Increased sub-steps (was 1.0)
         const dist = Math.sqrt(moveX * moveX + moveY * moveY);
         const steps = Math.ceil(dist / maxStep);
         let collisionData = null;
