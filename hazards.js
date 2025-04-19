@@ -1,6 +1,5 @@
 import { BALL_RADIUS, VORTEX_RADIUS, BARRIER_HEIGHT, BARRIER_WIDTH, hazardTypes, HAZARD_MAX, HAZARD_SPAWN_RATE, GRAVITY_STRENGTH, WIND_STRENGTH, PLAYGROUND_MAX_HAZARDS, PLAYGROUND_SPAWN_CHANCE } from './constants.js';
 import { createTeleportEffect, createParticles } from './particles.js';
-import { showHazardNotification } from './ui.js';
 
 // Spawn hazards with random chance
 export function spawnHazards(activeHazards, canvasWidth, canvasHeight, dangerMode, gameState) {

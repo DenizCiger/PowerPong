@@ -11,117 +11,80 @@ export const gameStatusEl = document.getElementById('game-status');
 
 // Generic notification display function
 export function showNotification(message, bgColor, position = '30%', duration = 2500) {
+    // Create notification container if it doesn't exist
+    let container = document.getElementById('notification-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'notification-container';
+        container.style.position = 'fixed';
+        container.style.top = '5%';
+        container.style.left = '50%';
+        container.style.transform = 'translateX(-50%)';
+        container.style.display = 'flex';
+        container.style.flexDirection = 'column';
+        container.style.alignItems = 'center';
+        container.style.zIndex = '9999';
+        container.style.width = '100%';
+        container.style.pointerEvents = 'none';
+        document.body.appendChild(container);
+    }
+
     // Create notification element
     const notification = document.createElement('div');
-    notification.className = 'game-notification';
-    
-    // Position at the specified position of the screen
-    notification.style.position = 'absolute';
-    notification.style.top = position;
-    notification.style.left = '50%';
-    notification.style.transform = 'translate(-50%, -50%)';
-    notification.style.padding = '10px 20px';
-    notification.style.borderRadius = '8px';
-    notification.style.color = '#fff';
-    notification.style.fontWeight = 'bold';
-    notification.style.opacity = '0';
-    notification.style.transition = 'opacity 0.5s';
-    notification.style.zIndex = '100';
-    notification.style.textAlign = 'center';
-    notification.style.fontSize = '18px';
-    notification.style.textShadow = '2px 2px 4px rgba(0, 0, 0, 0.7)';
-    notification.style.pointerEvents = 'none'; // Don't interfere with mouse events
-    
+    notification.className = 'game-notification-modern';
     notification.innerHTML = message;
-    notification.style.backgroundColor = bgColor;
-    
-    document.body.appendChild(notification);
-    
-    // Fade in
+    notification.style.background = bgColor || 'rgba(40, 60, 120, 0.7)';
+    notification.style.marginTop = '0px';
+    notification.style.marginBottom = '0px';
+    notification.style.transition = 'opacity 0.5s cubic-bezier(.4,2,.6,1), transform 0.5s cubic-bezier(.4,2,.6,1), margin 0.4s cubic-bezier(.4,2,.6,1)';
+
+    container.appendChild(notification);
+
+    // Animate in
     setTimeout(() => {
-        notification.style.opacity = '0.9';
-    }, 50);
-    
-    // Fade out and remove
+        notification.classList.add('show');
+        notification.style.marginTop = '10px';
+        notification.style.marginBottom = '10px';
+    }, 10);
+
+    // FLIP animation for stack when removing
+    function animateStackOnRemove(removed) {
+        const notifs = Array.from(container.children);
+        // Record first positions
+        const firstRects = notifs.map(n => n.getBoundingClientRect());
+        // Remove the notification
+        removed.remove();
+        // Record last positions
+        const lastRects = Array.from(container.children).map(n => n.getBoundingClientRect());
+        // Invert and play
+        Array.from(container.children).forEach((n, i) => {
+            const dy = firstRects[i+1] ? firstRects[i+1].top - lastRects[i].top : 0;
+            if (dy) {
+                n.style.transition = 'none';
+                n.style.transform = `translateY(${dy}px)`;
+                // Force reflow
+                n.getBoundingClientRect();
+                n.style.transition = 'transform 0.5s cubic-bezier(.4,2,.6,1)';
+                n.style.transform = '';
+            }
+        });
+    }
+
+    // Animate out and remove
     setTimeout(() => {
-        notification.style.opacity = '0';
+        notification.classList.remove('show');
+        notification.style.marginTop = '0px';
+        notification.style.marginBottom = '0px';
         setTimeout(() => {
-            notification.remove();
-        }, 500);
+            animateStackOnRemove(notification);
+            // Remove container if empty
+            if (container.childElementCount === 0) {
+                container.remove();
+            }
+        }, 600);
     }, duration);
-    
+
     return notification;
-}
-
-// Show a notification about power-ups
-export function showPowerUpNotification(type, player) {
-    const playerName = player === 'player1' ? 'Player 1' : 'Player 2';
-    let message, bgColor;
-    
-    switch(type) {
-        case 'speedUp':
-            message = `${playerName} gained Speed Boost!<br>Paddle moves 38% faster`;
-            bgColor = '#00aa00';
-            break;
-        case 'slowDown':
-            message = `${playerName} used Slow Down!<br>Opponent paddle moves 38% slower`;
-            bgColor = '#cc0000';
-            break;
-        case 'growPaddle':
-            message = `${playerName} gained Paddle Growth!<br>Paddle is 40% larger`;
-            bgColor = '#0066cc';
-            break;
-        case 'shrinkPaddle':
-            message = `${playerName} used Shrink Paddle!<br>Opponent paddle is 30% smaller`;
-            bgColor = '#cc00cc';
-            break;
-        case 'fastBall':
-            message = `${playerName} activated Fast Ball!<br>Ball speed increased by 30%`;
-            bgColor = '#cccc00';
-            break;
-        case 'multiball':
-            message = `${playerName} unleashed Multi Ball!<br>An extra ball appears`;
-            bgColor = '#cc6600';
-            break;
-        case 'fury':
-            message = `${playerName} enters FURY MODE!<br>+Size +Speed +Ball Speed`;
-            bgColor = '#aa0000';
-            break;
-        case 'curveShot':
-            message = `${playerName} activated Curve Shot!<br>Ball curves dynamically`;
-            bgColor = '#dd8800'; // Slightly darker orange for notification
-            break;
-    }
-    
-    showNotification(message, bgColor, '30%');
-}
-
-// Show notification about a new hazard
-export function showHazardNotification(type) {
-    let message, bgColor;
-    
-    switch(type) {        case 'blackHole':
-            message = 'BLACK HOLE!<br>The ball is being pulled toward the center';
-            bgColor = 'rgba(75, 0, 130, 0.9)';
-            break;        case 'whiteHole':
-            message = 'WHITE HOLE!<br>The ball is being pushed away';
-            bgColor = 'rgba(0, 200, 200, 0.9)';
-            break;
-        case 'windZone':
-            message = 'WIND ZONE!<br>The ball is blown in a random direction';
-            bgColor = 'rgba(100, 100, 255, 0.9)';
-            break;
-        case 'barrier':
-            message = 'MOVING BARRIER!<br>The ball will bounce off this obstacle';
-            bgColor = 'rgba(220, 20, 60, 0.9)';
-            break;
-        case 'portal':
-            message = 'PORTALS!<br>Teleport between linked portals';
-            bgColor = 'rgba(255, 140, 0, 0.9)';
-            break;
-    }
-    
-    showNotification(message, bgColor, '20%');
 }
 
 // Create a power-up effect indicator in the UI
