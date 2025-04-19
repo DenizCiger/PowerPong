@@ -207,7 +207,7 @@ function updateScreenShake() {
 }
 
 // Update paddle positions
-function updatePaddles() {
+function updatePaddles(deltaTime) {
     if (GameState.autoMode) {
         // Find the most relevant ball to track (closest one heading towards each paddle)
         let player1Target = GameState.canvasHeight / 2;
@@ -233,22 +233,22 @@ function updatePaddles() {
         });
         
         // Update CPU-controlled paddle positions
-        GameState.player1Y = updateCPUPaddle(GameState.player1Y, GameState.player1PaddleHeight, player1Target, GameState.player1PaddleSpeed);
-        GameState.player2Y = updateCPUPaddle(GameState.player2Y, GameState.player2PaddleHeight, player2Target, GameState.player2PaddleSpeed);
+        GameState.player1Y = updateCPUPaddle(GameState.player1Y, GameState.player1PaddleHeight, player1Target, GameState.player1PaddleSpeed * (deltaTime/16.67));
+        GameState.player2Y = updateCPUPaddle(GameState.player2Y, GameState.player2PaddleHeight, player2Target, GameState.player2PaddleSpeed * (deltaTime/16.67));
     } else {
         // Normal player controls
         if (GameState.keys.w && GameState.player1Y > 0) {
-            GameState.player1Y -= GameState.player1PaddleSpeed;
+            GameState.player1Y -= GameState.player1PaddleSpeed * (deltaTime/16.67);
         }
         if (GameState.keys.s && GameState.player1Y + GameState.player1PaddleHeight < GameState.canvasHeight) {
-            GameState.player1Y += GameState.player1PaddleSpeed;
+            GameState.player1Y += GameState.player1PaddleSpeed * (deltaTime/16.67);
         }
         
         if (GameState.keys.arrowup && GameState.player2Y > 0) {
-            GameState.player2Y -= GameState.player2PaddleSpeed;
+            GameState.player2Y -= GameState.player2PaddleSpeed * (deltaTime/16.67);
         }
         if (GameState.keys.arrowdown && GameState.player2Y + GameState.player2PaddleHeight < GameState.canvasHeight) {
-            GameState.player2Y += GameState.player2PaddleSpeed;
+            GameState.player2Y += GameState.player2PaddleSpeed * (deltaTime/16.67);
         }
     }
 }
@@ -400,7 +400,7 @@ function handleComboMilestones(prevCount, newCount, ball) {
 }
 
 // Update ball positions and check for collisions
-function updateBalls() {
+function updateBalls(deltaTime) {
     for (let i = GameState.balls.length - 1; i >= 0; i--) {
         const ball = GameState.balls[i];
 
@@ -422,30 +422,26 @@ function updateBalls() {
         if (ball.curveActive) {
             const elapsedTime = Date.now() - ball.curveStartTime;
             if (elapsedTime > Constants.POWERUP_DURATION) {
-                ball.curveActive = false; // Disable curve effect after duration
-                ball.curveAngle = 0; // Reset curve angle
+                ball.curveActive = false;
+                ball.curveAngle = 0;
             } else {
-                // Create a smooth oscillating curve effect
-                const maxCurveForce = 0.4; // Reduced for better control
-                const curvePeriod = 2000; // Complete one curve cycle every 2 seconds
+                const maxCurveForce = 0.4;
+                const curvePeriod = 2000;
                 const curveAngle = (elapsedTime % curvePeriod) / curvePeriod * Math.PI * 2;
-                
-                // Apply sinusoidal force perpendicular to ball's motion
                 const direction = Math.atan2(ball.speedY, ball.speedX);
                 const perpendicular = direction + Math.PI/2;
                 const forceMagnitude = Math.sin(curveAngle) * maxCurveForce;
-                
-                ball.speedX += Math.cos(perpendicular) * forceMagnitude;
-                ball.speedY += Math.sin(perpendicular) * forceMagnitude;
+                ball.speedX += Math.cos(perpendicular) * forceMagnitude * (deltaTime/16.67);
+                ball.speedY += Math.sin(perpendicular) * forceMagnitude * (deltaTime/16.67);
             }
         }
 
         // Apply hazard effects to ball movement
-        Hazards.applyHazardEffects(ball, GameState.activeHazards, GameState.applyScreenShake.bind(GameState));
+        Hazards.applyHazardEffects(ball, GameState.activeHazards, GameState.applyScreenShake.bind(GameState), deltaTime);
         
         // Move the ball
-        ball.x += ball.speedX;
-        ball.y += ball.speedY;
+        ball.x += ball.speedX * (deltaTime/16.67);
+        ball.y += ball.speedY * (deltaTime/16.67);
         
         // Check collisions with walls and paddles
         const collisionData = Physics.checkBallCollisions(
@@ -533,25 +529,30 @@ function gameLoop(timestamp) {
         // Only update game state if not paused
         if (!GameState.paused) {
             // Update game state
-            updatePaddles();
-            GameState.activeHazards = Hazards.updateHazards(GameState.activeHazards, GameState.canvasWidth, GameState.canvasHeight);
-            updateBalls();
+            updatePaddles(deltaTime);
+            GameState.activeHazards = Hazards.updateHazards(GameState.activeHazards, GameState.canvasWidth, GameState.canvasHeight, deltaTime);
+            updateBalls(deltaTime);
             GameState.activePowerUps = PowerUps.checkPowerUpCollisions(
                 GameState.balls, 
                 GameState.activePowerUps,
-                (type, player) => PowerUps.applyPowerUp(type, player, GameState)
-            );            GameState.activePowerUps = PowerUps.spawnPowerUps(
+                (type, player) => PowerUps.applyPowerUp(type, player, GameState),
+                deltaTime
+            );
+            GameState.activePowerUps = PowerUps.spawnPowerUps(
                 GameState.activePowerUps,
                 GameState.canvasWidth,
                 GameState.canvasHeight,
                 GameState.dangerMode,
-                GameState
-            );GameState.activeHazards = Hazards.spawnHazards(
+                GameState,
+                deltaTime
+            );
+            GameState.activeHazards = Hazards.spawnHazards(
                 GameState.activeHazards, 
                 GameState.canvasWidth,
                 GameState.canvasHeight,
                 GameState.dangerMode,
-                GameState
+                GameState,
+                deltaTime
             );
         }
         
@@ -582,7 +583,7 @@ function gameLoop(timestamp) {
         
         // Only update particles if not paused
         if (!GameState.paused) {
-            Particles.updateParticles();
+            Particles.updateParticles(deltaTime);
         }
         
         Particles.drawParticles(); 

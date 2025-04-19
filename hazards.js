@@ -81,7 +81,7 @@ export function spawnHazards(activeHazards, canvasWidth, canvasHeight, dangerMod
 }
 
 // Update hazards (animation, removal of expired hazards)
-export function updateHazards(activeHazards, canvasWidth, canvasHeight) {
+export function updateHazards(activeHazards, canvasWidth, canvasHeight, deltaTime) {
     const currentTime = Date.now();
     
     // Remove expired hazards (except barriers, which expire on hit count)
@@ -128,16 +128,14 @@ export function updateHazards(activeHazards, canvasWidth, canvasHeight) {
     // Move any moving hazards
     updatedHazards = updatedHazards.map(hazard => {
         if (hazard.type === 'barrier' && !hazard.velocity) {
-            // Initialize velocity for moving barriers
             hazard.velocity = { 
                 x: 0, 
                 y: (Math.random() > 0.5 ? 1 : -1) * (1 + Math.random()) 
             };
         }
-        
         if (hazard.velocity) {
-            hazard.y += hazard.velocity.y;
-            hazard.x += hazard.velocity.x;
+            hazard.y += hazard.velocity.y * (deltaTime/16.67);
+            hazard.x += hazard.velocity.x * (deltaTime/16.67);
             
             // Bounce off walls for moving barriers
             if (hazard.y < 0 || hazard.y + BARRIER_HEIGHT > canvasHeight) {
@@ -147,7 +145,6 @@ export function updateHazards(activeHazards, canvasWidth, canvasHeight) {
                 hazard.velocity.x = -hazard.velocity.x;
             }
         }
-        
         return hazard;
     });
     
@@ -155,7 +152,7 @@ export function updateHazards(activeHazards, canvasWidth, canvasHeight) {
 }
 
 // Handle ball-hazard interactions
-export function applyHazardEffects(ball, activeHazards, applyScreenShake) {
+export function applyHazardEffects(ball, activeHazards, applyScreenShake, deltaTime) {
     let hitBarriers = [];
 
     // If ball is trapped but its black hole is gone, force release it

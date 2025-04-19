@@ -191,14 +191,12 @@ export function drawScoreAnimations() {
 }
 
 // Update particles (for visual effects)
-export function updateParticles() {
+export function updateParticles(deltaTime) {
     for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
-        
-        // Update particle position
-        p.x += p.speedX;
-        p.y += p.speedY;
-        p.life--;
+        p.x += p.speedX * (deltaTime/16.67);
+        p.y += p.speedY * (deltaTime/16.67);
+        p.life -= (deltaTime/16.67);
         
         // Handle wind particles specially to keep them inside their rotated box
         if (p.isWindParticle && p.windZoneInfo) {

@@ -2,7 +2,7 @@ import { POWERUP_SPAWN_CHANCE, POWERUP_MAX, powerUpTypes, BALL_RADIUS, POWERUP_S
 import { player1EffectsEl, player2EffectsEl } from './ui.js';
 
 // Check for ball collision with power-ups
-export function checkPowerUpCollisions(balls, activePowerUps, applyPowerUp) {
+export function checkPowerUpCollisions(balls, activePowerUps, applyPowerUp, deltaTime) {
     const collidedPowerUps = [];
     
     for (let i = activePowerUps.length - 1; i >= 0; i--) {
@@ -83,7 +83,7 @@ function createPowerUpCollectionEffect(powerUp) {
 }
 
 // Spawn power-ups with intensity-based probabilities
-export function spawnPowerUps(activePowerUps, canvasWidth, canvasHeight, dangerMode, gameState) {
+export function spawnPowerUps(activePowerUps, canvasWidth, canvasHeight, dangerMode, gameState, deltaTime) {
     let spawnChance = gameState.playgroundMode ? PLAYGROUND_SPAWN_CHANCE : POWERUP_SPAWN_CHANCE;
     let maxPowerups = gameState.playgroundMode ? PLAYGROUND_MAX_POWERUPS : POWERUP_MAX;
     let updatedPowerUps = [...activePowerUps];
@@ -183,37 +183,29 @@ export function spawnPowerUps(activePowerUps, canvasWidth, canvasHeight, dangerM
     
     // Update powerups - handle spawn animations
     updatedPowerUps = updatedPowerUps.map(powerUp => {
-        // If powerup is in spawn animation
         if (powerUp.spawning) {
             const elapsedTime = Date.now() - powerUp.createdAt;
-            if (elapsedTime > 300) { // End spawn animation after 300ms
+            if (elapsedTime > 300) {
                 powerUp.spawning = false;
                 powerUp.spawnProgress = 1;
             } else {
-                // Progress from 0 to 1 during spawn animation
                 powerUp.spawnProgress = Math.min(elapsedTime / 300, 1);
             }
         }
-        
-        // Add movement - small hovering effect
         if (!powerUp.hovering) {
             powerUp.hovering = {
-                amplitude: 2 + Math.random() * 1.5, // Random amplitude
-                frequency: 0.001 + Math.random() * 0.001, // Random frequency
-                phase: Math.random() * Math.PI * 2, // Random phase
+                amplitude: 2 + Math.random() * 1.5,
+                frequency: 0.001 + Math.random() * 0.001,
+                phase: Math.random() * Math.PI * 2,
                 baseY: powerUp.y
             };
         }
-        
-        // Apply hovering effect to y position
         if (powerUp.hovering) {
             const hover = powerUp.hovering;
-            powerUp.y = hover.baseY + Math.sin(Date.now() * hover.frequency + hover.phase) * hover.amplitude;
+            powerUp.y = hover.baseY + Math.sin(Date.now() * hover.frequency + hover.phase) * hover.amplitude * (deltaTime/16.67);
         }
-        
         return powerUp;
     });
-    
     return updatedPowerUps;
 }
 
