@@ -8,6 +8,7 @@ export const PADDLE_SPEED = 10; // Faster paddle movement for better control at 
 export const POWERUP_SIZE = 30;
 export const POWERUP_SPAWN_CHANCE = 0.008; // Increased chance for more action
 export const POWERUP_MAX = 4; // Allow more power-ups at once
+export const POWERUP_DESPAWN_TIME = 10000; // Power-ups despawn after 7 seconds if not collected
 
 // Playground mode constants
 export const PLAYGROUND_MAX_POWERUPS = 5; // Maximum powerups in playground mode
@@ -18,7 +19,7 @@ export const PLAYGROUND_SPAWN_CHANCE = 0.015; // Increased spawn chance for test
 export const POWERUP_DURATION = 7000; // 7 seconds
 export const POWERUP_PARTICLE_COUNT = 8; // Particles created when powerup is collected
 export const BALL_ACCELERATION = 0.5; // Ball gets faster with each paddle hit
-export const MAX_BALL_SPEED = 30; // Maximum ball speed cap
+export const MAX_BALL_SPEED = 100; // Maximum ball speed cap
 export const SCREEN_SHAKE_DURATION = 150; // How long the screen shakes in ms
 export const SCREEN_SHAKE_INTENSITY = 10; // How much the screen shakes
 export const HAZARD_SPAWN_RATE = 0.003; // Chance per frame of spawning a hazard

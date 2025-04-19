@@ -1,4 +1,4 @@
-import { POWERUP_SPAWN_CHANCE, POWERUP_MAX, powerUpTypes, BALL_RADIUS, POWERUP_SIZE, POWERUP_DURATION, PLAYGROUND_SPAWN_CHANCE, PLAYGROUND_MAX_POWERUPS } from './constants.js';
+import { POWERUP_SPAWN_CHANCE, POWERUP_MAX, powerUpTypes, BALL_RADIUS, POWERUP_SIZE, POWERUP_DURATION, PLAYGROUND_SPAWN_CHANCE, PLAYGROUND_MAX_POWERUPS, POWERUP_DESPAWN_TIME } from './constants.js';
 import { player1EffectsEl, player2EffectsEl } from './ui.js';
 
 // Check for ball collision with power-ups
@@ -84,9 +84,11 @@ function createPowerUpCollectionEffect(powerUp) {
 
 // Spawn power-ups with intensity-based probabilities
 export function spawnPowerUps(activePowerUps, canvasWidth, canvasHeight, dangerMode, gameState, deltaTime) {
+    // Remove power-ups that have existed longer than the despawn time
+    let now = Date.now();
+    let updatedPowerUps = activePowerUps.filter(pu => (now - pu.createdAt) < POWERUP_DESPAWN_TIME);
     let spawnChance = gameState.playgroundMode ? PLAYGROUND_SPAWN_CHANCE : POWERUP_SPAWN_CHANCE;
     let maxPowerups = gameState.playgroundMode ? PLAYGROUND_MAX_POWERUPS : POWERUP_MAX;
-    let updatedPowerUps = [...activePowerUps];
     
     // Increase spawn chance in danger mode (only in normal mode)
     if (dangerMode && !gameState.playgroundMode) {

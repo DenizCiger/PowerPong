@@ -1,5 +1,5 @@
 import { ctx } from './ui.js';
-import { BALL_RADIUS, PADDLE_MARGIN, PADDLE_WIDTH, POWERUP_SIZE, VORTEX_RADIUS, BARRIER_WIDTH, BARRIER_HEIGHT, WIND_STRENGTH, BARRIER_COLORS, BARRIER_SEGMENT_GAP, BARRIER_SEGMENTS } from './constants.js';
+import { BALL_RADIUS, PADDLE_MARGIN, PADDLE_WIDTH, POWERUP_SIZE, VORTEX_RADIUS, BARRIER_WIDTH, BARRIER_HEIGHT, WIND_STRENGTH, BARRIER_COLORS, BARRIER_SEGMENT_GAP, BARRIER_SEGMENTS, POWERUP_DESPAWN_TIME } from './constants.js';
 import * as Particles from './particles.js';
 
 // Draw the arena/court
@@ -888,6 +888,20 @@ export function drawPowerUps(activePowerUps) {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(powerUp.effect, 0, 0);
+        }
+        
+        // Visual countdown for last 3 seconds before despawn
+        const timeLeft = Math.ceil((POWERUP_DESPAWN_TIME - (now - powerUp.createdAt)) / 1000);
+        if (timeLeft > 0 && timeLeft <= 3) {
+            ctx.save();
+            ctx.font = 'bold 10px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowColor = 'rgba(0,0,0,0.7)';
+            ctx.shadowBlur = 6;
+            ctx.fillStyle = timeLeft === 1 ? '#ff3333' : '#ffffff';
+            ctx.fillText(timeLeft, 0, -POWERUP_SIZE/1.2);
+            ctx.restore();
         }
         
         // Restore the context state
