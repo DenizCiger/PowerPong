@@ -7,7 +7,6 @@ export const player1ScoreEl = document.getElementById('player1-score');
 export const player2ScoreEl = document.getElementById('player2-score');
 export const player1EffectsEl = document.getElementById('player1-effects');
 export const player2EffectsEl = document.getElementById('player2-effects');
-export const gameStatusEl = document.getElementById('game-status');
 
 // Generic notification display function
 export function showNotification(message, bgColor, position = '30%', duration = 2500) {
@@ -143,7 +142,7 @@ export function createEffectIndicator(type, player, effectId) {
 
 // Draw countdown above the ball
 export function drawBallCountdown(ball, ballFreezeUntil) {
-    const timeRemaining = Math.ceil((ballFreezeUntil - Date.now()) / 1000);
+    const timeRemaining = Math.ceil((ballFreezeUntil - Date.now())/(1000/3)); // Quick 3-2-1 countdown
     if (timeRemaining <= 0) return;
 
     // Save the current canvas state

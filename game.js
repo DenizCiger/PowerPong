@@ -61,7 +61,6 @@ const GameState = {
         s: false,
         arrowup: false,
         arrowdown: false,
-        ' ': false,
         'p': false,
         'escape': false
     },
@@ -104,20 +103,17 @@ function generateBackgroundStars() {
 function initGame() {
     GameState.player1Y = (GameState.canvasHeight - GameState.player1PaddleHeight) / 2;
     GameState.player2Y = (GameState.canvasHeight - GameState.player2PaddleHeight) / 2;
-    resetBall();
+
     GameState.activePowerUps = [];
     GameState.balls = [];
+    
     GameState.balls.push({
         x: GameState.ballX,
         y: GameState.ballY,
         speedX: GameState.ballSpeedX,
         speedY: GameState.ballSpeedY
     });
-    
-    // Clear any existing active effects
-    GameState.activeEffects = { player1: {}, player2: {} };
-    UI.player1EffectsEl.innerHTML = '';
-    UI.player2EffectsEl.innerHTML = '';
+    resetRound();
     
     // Clear active hazards
     GameState.activeHazards = [];
@@ -132,7 +128,6 @@ function initGame() {
 // Start the game
 function startGame() {
     GameState.gameRunning = true;
-    UI.gameStatusEl.style.display = 'none';
     initGame();
     requestAnimationFrame(gameLoop);
 }
@@ -160,7 +155,7 @@ function resetRound() {
     GameState.ballFrozen = true;
     GameState.ballFreezeUntil = Date.now() + 1000; // 1 second from now
     
-    // Automatically continue the game instead of waiting for SPACE press
+    // Game starts automatically
     GameState.gameRunning = true;
     
     // Reset paddle sizes and speeds to default values to prevent accumulated speed changes
@@ -171,10 +166,6 @@ function resetRound() {
     
     // Clear all active effects
     for (const player of ['player1', 'player2']) {
-        for (const effectId in GameState.activeEffects[player]) {
-            const effect = GameState.activeEffects[player][effectId];
-            if (effect.element) effect.element.remove();
-        }
         GameState.activeEffects[player] = {};
     }
     
@@ -662,11 +653,6 @@ window.addEventListener('keydown', (e) => {
         GameState.keys[key] = true;
     }
     
-    // Handle game start
-    if (key === ' ' && !GameState.gameRunning) {
-        startGame();
-    }
-    
     // Handle game modes
     if (key === 'p' && e.altKey) {
         e.preventDefault(); // Prevent the 'p' key from triggering pause
@@ -892,4 +878,4 @@ function predictBallYWithHazards(ball, paddleX, activeHazards, canvasWidth, canv
 }
 
 // Initialize the game at startup
-initGame();
+startGame();
