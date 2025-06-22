@@ -113,10 +113,24 @@ export class PhaserHazards {
                 sprite.destroy();
             }
         }
-    }
-
-    update(deltaTime: number): void {
-        // Update hazard logic if needed
+    }    update(deltaTime: number): void {
+        // Remove expired hazards
+        const currentTime = Date.now();
+        const expiredIndices: number[] = [];
+          this.activeHazards.forEach((hazard, index) => {
+            // Check if hazard has expired (except persistent ones like wind)
+            const hazardType = hazardTypes.find(h => h.type === hazard.type);
+            const duration = hazardType?.duration || 10000; // fallback to 10 seconds
+            
+            if (hazard.type !== 'wind' && currentTime - hazard.createdAt > duration) {
+                expiredIndices.push(index);
+            }
+        });
+        
+        // Remove expired hazards in reverse order to maintain indices
+        expiredIndices.reverse().forEach(index => {
+            this.removeHazard(index);
+        });
     }
 
     reset(): void {

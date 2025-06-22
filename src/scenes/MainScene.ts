@@ -16,7 +16,9 @@ import {
     PLAYGROUND_MAX_HAZARDS,
     HAZARD_MAX,
     HAZARD_SPAWN_RATE,
-    powerUpTypes
+    HAZARD_DURATION,
+    powerUpTypes,
+    hazardTypes
 } from '../constants';
 import { PhaserPhysics } from '../components/PhaserPhysics';
 import { PhaserParticles } from '../components/PhaserParticles';
@@ -241,15 +243,17 @@ export class MainScene extends Phaser.Scene {
             Math.cos(angle) * speed * direction,
             Math.sin(angle) * speed
         );
-    }
-
-    private resetRound(): void {
+    }    private resetRound(): void {
         this.resetBall();
         this.ballFrozen = true;
         this.ballFreezeUntil = Date.now() + 1000;
         
         // Stop ball movement during freeze
         (this.ball.body as Phaser.Physics.Arcade.Body).setVelocity(0, 0);
+        
+        // Reset game systems
+        this.powerUpSystem.reset();
+        this.hazardSystem.reset();
         
         this.gameRunning = true;
     }
@@ -496,31 +500,38 @@ export class MainScene extends Phaser.Scene {
                 16.67
             );
         }
-    }
-
-    private updateHazards(): void {
+    }    private updateHazards(): void {
         if (this.paused) return;
         
         // Spawn hazards
-        // this.spawnHazards();
+        this.spawnHazards();
         
-        // Apply hazard effects to balls
-        // this.hazardSystem.applyHazardEffects(this.balls, this.activeHazards);
-        
-        // Update hazards (animations, expiration)  
-        // this.activeHazards = this.hazardSystem.updateHazards(this.activeHazards);
+        // Apply hazard effects to balls (check collisions)
+        this.hazardSystem.checkCollisions(this.balls);
+          // Update hazard system (this handles expiration internally)
+        this.hazardSystem.update(this.game.loop.delta);
     }
 
     private spawnHazards(): void {
         // Don't spawn if max reached
-        // const maxHazards = this.playgroundMode ? PLAYGROUND_MAX_HAZARDS : HAZARD_MAX;
-        // if (this.activeHazards.length >= maxHazards) return;
+        const maxHazards = this.playgroundMode ? PLAYGROUND_MAX_HAZARDS : HAZARD_MAX;
+        const activeHazards = this.hazardSystem.getActiveHazards();
+        if (activeHazards.length >= maxHazards) return;
         
-        // Hazard spawning temporarily disabled for TypeScript conversion
-        // TODO: Implement proper hazard system integration
-    }
-
-    private updateDangerEffects(): void {
+        // Check spawn probability
+        if (Math.random() < HAZARD_SPAWN_RATE) {
+            // Choose random hazard type
+            const hazardType = hazardTypes[Math.floor(Math.random() * hazardTypes.length)];
+              // Spawn at random location in safe area (avoiding paddles)
+            const safeMargin = 100;
+            const gameWidth = this.cameras.main.width;
+            const gameHeight = this.cameras.main.height;
+            const x = safeMargin + Math.random() * (gameWidth - 2 * safeMargin);
+            const y = safeMargin + Math.random() * (gameHeight - 2 * safeMargin);
+            
+            this.hazardSystem.spawnHazard(x, y, hazardType.type);
+        }
+    }    private updateDangerEffects(): void {
         // Add pulsing center line effect
         // This would require recreating the center line graphics
         // Implementation details would go here
