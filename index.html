@@ -16,7 +16,7 @@
             <div class="game-title">POWER PONG</div>
             <div id="player2-score">0</div>
         </div>
-        <canvas id="gameCanvas" width="800" height="500"></canvas>
+        <div id="phaser-game"></div>
         <div class="info-container">
             <div class="controls">
                 <p>Player 1: W/S</p>
@@ -223,7 +223,8 @@
             helpOverlay.style.display = 'none';
         }
     }
-    </script>
-    <script type="module" src="game.js"></script>
+    </script>    <!-- Phaser 3 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+    <script type="module" src="phaser-game.js"></script>
 </body>
 </html>
