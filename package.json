@@ -1,0 +1,29 @@
+{
+  "name": "power-pong-phaser3",
+  "version": "1.0.0",
+  "description": "Power Pong game built with Phaser 3 and TypeScript",
+  "main": "dist/phaser-game.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "dev": "live-server --port=5500 --entry-file=index-ts.html",
+    "clean": "rimraf dist"
+  },
+  "keywords": [
+    "phaser3",
+    "typescript",
+    "game",
+    "pong"
+  ],
+  "author": "Power Pong Developer",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "live-server": "^1.2.2",
+    "rimraf": "^5.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0"
+  }
+}

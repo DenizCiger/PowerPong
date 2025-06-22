@@ -1,33 +1,45 @@
-import * as Constants from '../constants.js';
+import Phaser from 'phaser';
+import * as Constants from '../constants';
+import { CollisionData, WallCollisionData, ScoreData } from '../types/GameTypes';
 
 export class PhaserPhysics {
-    static accelerateBall(ball) {
+    static accelerateBall(ball: Phaser.GameObjects.Arc): void {
         // Only accelerate if we haven't hit the speed cap
-        const currentSpeed = Math.sqrt(ball.body.velocity.x ** 2 + ball.body.velocity.y ** 2);
+        const body = ball.body as Phaser.Physics.Arcade.Body;
+        const currentSpeed = Math.sqrt(body.velocity.x ** 2 + body.velocity.y ** 2);
         
         if (currentSpeed < Constants.MAX_BALL_SPEED) {
-            const direction = ball.body.velocity.x > 0 ? 1 : -1;
+            const direction = body.velocity.x > 0 ? 1 : -1;
             const newSpeed = Math.min(currentSpeed + Constants.BALL_ACCELERATION, Constants.MAX_BALL_SPEED);
-            const angle = Math.atan2(ball.body.velocity.y, Math.abs(ball.body.velocity.x));
+            const angle = Math.atan2(body.velocity.y, Math.abs(body.velocity.x));
             
-            ball.body.setVelocity(
+            body.setVelocity(
                 Math.cos(angle) * newSpeed * direction,
                 Math.sin(angle) * newSpeed
             );
         }
     }
 
-    static getComboSpeedMultiplier(rallyCount) {
+    static getComboSpeedMultiplier(rallyCount: number): number {
         if (rallyCount <= 5) return 1;
         return Math.min(2.5, 1 + Math.log10(rallyCount / 5) * 0.5);
-    }    static handleBallPaddleCollision(ball, paddle, paddleIndex, rallyCount, scene) {
+    }
+
+    static handleBallPaddleCollision(
+        ball: Phaser.GameObjects.Arc, 
+        paddle: Phaser.GameObjects.Rectangle, 
+        paddleIndex: number, 
+        rallyCount: number, 
+        scene: Phaser.Scene
+    ): CollisionData {
         // Calculate relative hit position (-0.5 to 0.5)
         const paddleCenter = paddle.y;
         const hitPos = (ball.y - paddleCenter) / paddle.displayHeight;
         const clampedHitPos = Math.max(-0.5, Math.min(0.5, hitPos));
         
         // Get current speed and accelerate it
-        const currentSpeed = Math.sqrt(ball.body.velocity.x ** 2 + ball.body.velocity.y ** 2);
+        const body = ball.body as Phaser.Physics.Arcade.Body;
+        const currentSpeed = Math.sqrt(body.velocity.x ** 2 + body.velocity.y ** 2);
         const baseSpeed = Math.max(currentSpeed + Constants.BALL_ACCELERATION, Constants.BALL_SPEED);
         
         // Apply combo multiplier (but don't let it go below base speed)
@@ -39,7 +51,7 @@ export class PhaserPhysics {
         
         // Set new velocity based on paddle
         const direction = paddleIndex === 1 ? 1 : -1;
-        ball.body.setVelocity(
+        body.setVelocity(
             Math.cos(angle) * newSpeed * direction,
             Math.sin(angle) * newSpeed
         );
@@ -52,11 +64,11 @@ export class PhaserPhysics {
         }
         
         // Cap maximum speed
-        const finalSpeed = Math.sqrt(ball.body.velocity.x ** 2 + ball.body.velocity.y ** 2);
+        const finalSpeed = Math.sqrt(body.velocity.x ** 2 + body.velocity.y ** 2);
         if (finalSpeed > Constants.MAX_BALL_SPEED) {
-            const normalizedX = ball.body.velocity.x / finalSpeed;
-            const normalizedY = ball.body.velocity.y / finalSpeed;
-            ball.body.setVelocity(
+            const normalizedX = body.velocity.x / finalSpeed;
+            const normalizedY = body.velocity.y / finalSpeed;
+            body.setVelocity(
                 normalizedX * Constants.MAX_BALL_SPEED,
                 normalizedY * Constants.MAX_BALL_SPEED
             );
@@ -67,22 +79,25 @@ export class PhaserPhysics {
             paddleIndex: paddleIndex,
             rallyIncrement: 1
         };
-    }    static handleBallWallCollision(ball, scene) {
-        let collision = { wallHit: false };
+    }
+
+    static handleBallWallCollision(ball: Phaser.GameObjects.Arc, scene: Phaser.Scene): WallCollisionData {
+        let collision: WallCollisionData = { wallHit: false };
+        const body = ball.body as Phaser.Physics.Arcade.Body;
         
         // Check top wall
         if (ball.y <= Constants.BALL_RADIUS) {
             ball.y = Constants.BALL_RADIUS + 1;
-            if (ball.body.velocity.y < 0) {
-                ball.body.velocity.y = -ball.body.velocity.y;
+            if (body.velocity.y < 0) {
+                body.velocity.y = -body.velocity.y;
             }
             collision = { wallHit: true, wall: 'top' };
         } 
         // Check bottom wall
         else if (ball.y >= scene.cameras.main.height - Constants.BALL_RADIUS) {
             ball.y = scene.cameras.main.height - Constants.BALL_RADIUS - 1;
-            if (ball.body.velocity.y > 0) {
-                ball.body.velocity.y = -ball.body.velocity.y;
+            if (body.velocity.y > 0) {
+                body.velocity.y = -body.velocity.y;
             }
             collision = { wallHit: true, wall: 'bottom' };
         }
@@ -90,7 +105,7 @@ export class PhaserPhysics {
         return collision;
     }
 
-    static checkScoring(ball, scene) {
+    static checkScoring(ball: Phaser.GameObjects.Arc, scene: Phaser.Scene): ScoreData {
         if (ball.x < 0) {
             return { scored: true, scoringPlayer: 2 };
         } else if (ball.x > scene.cameras.main.width) {

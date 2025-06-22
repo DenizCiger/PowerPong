@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Pong - TypeScript Edition</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="phaser-game"></div>
+    
+    <div class="game-ui">
+        <div class="player1-side">
+            <div class="score-container">
+                <div class="score-label">Player 1</div>
+                <div id="player1Score" class="score">0</div>
+            </div>
+            <div class="controls">
+                <p>Player 1: W/S</p>
+                <div id="player1-effects" class="effects"></div>
+            </div>
+        </div>
+        
+        <div class="center-ui">
+            <div id="gameStatus" class="game-status">Press SPACE to start</div>
+            <div id="comboDisplay" class="combo-display" style="display: none;">
+                <span class="combo-text">COMBO</span>
+                <span class="combo-count">0</span>
+            </div>
+            <div class="help-button" onclick="toggleHelp()">?</div>
+            <div class="controls">
+                <p>Player 2: ↑/↓</p>
+                <div id="player2-effects" class="effects"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function toggleHelp() {
+        const helpOverlay = document.getElementById('helpOverlay');
+        if (helpOverlay.style.display === 'none') {
+            helpOverlay.style.display = 'flex';
+        } else {
+            helpOverlay.style.display = 'none';
+        }
+    }
+    </script>
+
+    <!-- Load compiled TypeScript -->
+    <script type="module" src="dist/phaser-game.js"></script>
+</body>
+</html>

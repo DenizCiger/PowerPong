@@ -9,12 +9,13 @@ const config = {
     width: 800,
     height: 500,
     parent: 'phaser-game',
-    backgroundColor: '#000000',
-    physics: {
+    backgroundColor: '#000000',    physics: {
         default: 'arcade',
         arcade: {
             gravity: { y: 0 },
-            debug: false
+            debug: false,
+            fps: 60,
+            fixedStep: false
         }
     },
     scene: [MainScene, MenuScene, GameOverScene],

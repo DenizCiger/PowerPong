@@ -114,8 +114,7 @@ export class MainScene extends Phaser.Scene {
             Constants.PADDLE_WIDTH,
             Constants.PADDLE_HEIGHT,
             0x4488ff
-        );
-        this.physics.add.existing(this.player1Paddle, true); // Static body
+        );        this.physics.add.existing(this.player1Paddle, true); // Static body (already immovable)
         
         this.player2Paddle = this.add.rectangle(
             this.cameras.main.width - Constants.PADDLE_MARGIN - Constants.PADDLE_WIDTH / 2,
@@ -124,7 +123,7 @@ export class MainScene extends Phaser.Scene {
             Constants.PADDLE_HEIGHT,
             0xff4444
         );
-        this.physics.add.existing(this.player2Paddle, true); // Static body
+        this.physics.add.existing(this.player2Paddle, true); // Static body (already immovable)
         
         // Create ball
         this.ball = this.add.circle(
@@ -134,6 +133,9 @@ export class MainScene extends Phaser.Scene {
             0xffffff
         );
         this.physics.add.existing(this.ball);
+        this.ball.body.setCollideWorldBounds(false); // We'll handle wall collisions manually
+        this.ball.body.setBounce(0); // No automatic bounce
+        this.ball.body.setCircle(Constants.BALL_RADIUS);
         
         // Store ball in balls array for compatibility
         this.balls = [this.ball];

@@ -1,0 +1,1 @@
+{"root":["./src/constants.ts","./src/phaser-game.ts","./src/components/phaserhazards.ts","./src/components/phaserparticles.ts","./src/components/phaserphysics.ts","./src/components/phaserpowerups.ts","./src/components/phaserui.ts","./src/scenes/gameoverscene.ts","./src/scenes/mainscene.ts","./src/scenes/menuscene.ts","./src/types/gametypes.ts"],"errors":true,"version":"5.8.3"}
